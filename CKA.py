@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+### Mot used as a python file at the moment
 import numpy as np
 import HSIC
 import math
