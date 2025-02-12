@@ -1,0 +1,545 @@
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 1: 0.8103448275862069
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 2: 0.46551724137931033
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 3: 0.9655172413793104
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 4: 0.6724137931034483
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 5: 0.46551724137931033
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 6: 0.6896551724137931
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Subject 7: 0.5862068965517241
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+Subject 8: 0.9827586206896551
+Not setting metadata
+288 matching events found
+No baseline correction applied
+0 projection items activated
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\moabb\datasets\preprocessing.py:279: UserWarning: warnEpochs <Epochs | 24 events (all good), 2 – 6 s (baseline off), ~4.1 MiB, data loaded,
+ 'left_hand': 12
+ 'right_hand': 12>
+  warn(f"warnEpochs {epochs}")
+C:\Users\User\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\braindecode\models\base.py:180: UserWarning: LogSoftmax final layer will be removed! Please adjust your loss function accordingly (e.g. CrossEntropyLoss)!
+  warnings.warn("LogSoftmax final layer will be removed! " +
+Subject 9: 0.9827586206896551
