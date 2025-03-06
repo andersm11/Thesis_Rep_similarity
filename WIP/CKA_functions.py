@@ -14,6 +14,8 @@ import pickle
 import os
 from typing import Type,Optional
 from itertools import product
+import collapsed_shallow_fbscp
+import torch.nn.functional as F
 
 
 # CKA math
@@ -113,12 +115,11 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
     found_layer_names = []
     # Check if the output directory exists and is not empty
     if os.path.exists(output_dir) and os.listdir(output_dir):
-        print(f"Output directory {output_dir} is not empty. Returning found layer names.")
+        print(f"Output directory {output_dir} is not empty, assuming kernel already computed. Returning found layer names.")
         for name, layer in model.named_modules():
             if name in layer_names:
                 found_layer_names.append(name)
         return found_layer_names  # Return the found layer names if the directory isn't empty
-
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -130,7 +131,6 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
             activations[name] = output.detach()
         return hook
 
-    # Register hooks for specific layers
     for name, layer in model.named_modules():
         if name in layer_names:
             layer.register_forward_hook(get_activation(name))
@@ -212,62 +212,101 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
     return full_kernel.cpu()
 
 
-def compute_full_kernels(layer_names: list[str], total_nr_batches: int, batch_size:int, total_samples: int, load_dir:str,  save_dir:str, n_batches:int = 1, use_cuda:bool=False):
-    """Computes the kernels for model and save them to the given directory."""
-    
-    # Ensure the save directory exists
-    #if not os.path.exists(save_dir):
-        #os.makedirs(save_dir)
-    model_kernels = {}
-    # Compute and save kernels for model 1
-    for layer in layer_names:
-        # Compute the kernel
-        kernel = compute_kernel_full_lowmem(layer, total_nr_batches, batch_size, total_samples, load_dir, n_batches, use_cuda)
-        #print(kernel)
-        print("got layer: ", layer)
-        # print("i got layer:::   ", layer)
-        # if (kernel[layer] == 0).any():
-        #     print("The tensor contains at least one zero value.")
-        model_kernels[layer] = kernel
+import os
+import torch
 
-    #_, kernel_filename = save_dir.rsplit('/',1)
-    #kernel_path = os.path.join(save_dir, kernel_filename)
-    save_path, _ = save_dir.rsplit('.',1)
-    torch.save(model_kernels, save_path)
-    print(f"Saved kernels for model at {save_dir}")
+def compute_full_kernels(layer_names: list[str], total_nr_batches: int, batch_size: int, total_samples: int, load_dir: str, id:str,save_dir: str, n_batches: int = 1, use_cuda: bool = False):
+    """Computes the kernels for model and saves them to the given directory if not already saved.
+    Deletes all elements in load_dir after computation and adds an empty 'done' file."""
+    
+    save = save_dir+f"/{id}"
+    # Check if the file already exists
+    if os.path.exists(save):
+        print(f"Kernel file already exists at {save}. Skipping computation.")
+        return
+    
+    model_kernels = {}
+    
+    # Compute and save kernels for model
+    for layer in layer_names:
+        print("Got layer:", layer)
+        kernel = compute_kernel_full_lowmem(layer, total_nr_batches, batch_size, total_samples, load_dir, n_batches, use_cuda)
+        
+        model_kernels[layer] = kernel
+    
+    torch.save(model_kernels, save)
+    print(f"Saved kernels for model at {save}")
+    
+    # Delete all elements in load_dir
+    for file_name in os.listdir(load_dir):
+        file_path = os.path.join(load_dir, file_name)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                os.rmdir(file_path)
+        except Exception as e:
+            print(f"Failed to delete {file_path}: {e}")
+    print(f"Cleared all elements in {load_dir}")
+    
+    # Add an empty 'done' file to load_dir
+    done_file_path = os.path.join(load_dir, 'done')
+    with open(done_file_path, 'w') as f:
+        pass  # Just create an empty file
+    print(f"Added empty 'done' file to {load_dir}")
+
 
 
 #compute kernels for all models in directory
 def compute_multi_model_kernels(
-    models_directory:str, 
-    activations_root_directory:str,
-    kernels_directory:str, 
-    input_data:torch.Tensor, 
-    layer_names:list[str], 
-    use_state:bool = False, 
-    batch_size:int=128,
-    n_batches:int = 1,
-    use_cuda:bool = False
+    models_directory: str,
+    activations_root_directory: str,
+    kernels_directory: str,
+    input_data: torch.Tensor,
+    layer_names: list[str],
+    use_state: bool = False,
+    batch_size: int = 128,
+    n_batches: int = 1,
+    use_cuda: bool = False
 ):
+    """Computes kernels for multiple models and saves them in the given directory."""
     model_files = os.listdir(models_directory)
     total_samples = input_data.shape[0]
-    total_nr_batches = math.ceil(total_samples/batch_size)
+    total_nr_batches = math.ceil(total_samples / batch_size)
+    final_layer_names=[]
+    final_model_names=[]
     for model_file in model_files:
         if not model_file.endswith('state.pth'):
             model_name, loss, seed = model_file.rsplit('_', 2)
-            # model_path = os.path.join(models_directory, model_file)
-            model = load_model(model_file,models_directory)
-            model.eval() 
-            found_names = extract_model_activations(model, input_data, activations_root_directory+f"/{model_name}/{loss}_{seed}",layer_names, batch_size=batch_size)
+            model = load_model(model_file, models_directory)
+            model.eval()
+            
+            activation_dir = os.path.join(activations_root_directory, model_name, f"{loss}_{seed}")
+            try:
+                found_names = extract_model_activations(model, input_data, activation_dir, layer_names, batch_size=batch_size)
+            except Exception as e:
+                print(f"Error extracting activations: {e}. Resampling input data to 1000 samples and retrying.")
+                downsampled_data = F.interpolate(input_data, size=(1000,), mode='linear', align_corners=False)
+                #print(downsampled_data.shape)
+                found_names = extract_model_activations(model, downsampled_data, activation_dir, layer_names, batch_size=batch_size)
+            if not (model_name in final_model_names):
+                final_model_names.append(model_name)
+                final_layer_names.append(found_names)
+            kernel_dir = os.path.join(kernels_directory, model_name)
+            os.makedirs(kernel_dir, exist_ok=True)  # Ensure kernel directory exists
+            #kernel_path, _ = kernel_dir.rsplit('.', 1)
             compute_full_kernels(
-                found_names,     
+                found_names,
                 total_nr_batches,
-                batch_size,total_samples,
-                activations_root_directory+f"/{model_name}/{loss}_{seed}",
-                kernels_directory+f"/{model_name}/{loss}_{seed}",
+                batch_size,
+                total_samples,
+                activation_dir,
+                f"{loss}_{seed}",
+                kernel_dir,
                 n_batches,
                 use_cuda
             )
+    return final_layer_names, final_model_names
             
             
 
@@ -282,14 +321,14 @@ def compute_cross_model_cka(root_dir: str):
         np.array: A 2D NumPy array representing the CKA similarity matrix.
     """
     model_dirs = sorted([os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))])
-
     if len(model_dirs) != 2:
         raise ValueError("Expected exactly two model type directories in the root directory.")
 
     # Load kernels for both model types into lists
     model_type1_kernels = []  # For the first model type
     model_type2_kernels = []  # For the second model type
-
+    model_name1 =""
+    model_name2 = ""
     for i, model_dir in enumerate(model_dirs):
         for filename in os.listdir(model_dir):
             model_path = os.path.join(model_dir, filename)
@@ -298,12 +337,11 @@ def compute_cross_model_cka(root_dir: str):
             # Append the kernel for each model type into the respective list
             if i == 0:
                 model_type1_kernels.append(kernel)  # For the first model type
+                _ , model_name1 = model_dir.rsplit('/',1)
             else:
+                _ , model_name2 = model_dir.rsplit('/',1)
                 model_type2_kernels.append(kernel)  # For the second model type
-    print("llllllen:",len(model_type1_kernels))
-    print("llllllen2:",len(model_type1_kernels))
-    
-        # Initialize CKA matrix (assuming all models have the same number of kernels for simplicity)
+
     # Initialize the results dictionary and matrix
     cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
 
@@ -327,7 +365,7 @@ def compute_cross_model_cka(root_dir: str):
                     
                     # Accumulate the CKA value for the current layer pair
                     cka_inner[idx1, idx2] += cka_value
-                    print(f"CKA({layer1}, {layer2}): {cka_value}")
+                    print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
             
         # Average the CKA values for each layer pair after looping through all kernels in model_type2
         cka_inner /= len(model_type2_kernels)
@@ -341,6 +379,28 @@ def compute_cross_model_cka(root_dir: str):
     cka_results /= len(model_type1_kernels)
 
     return cka_results  # Return the CKA similarity matrix
+
+
+def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
+    n_layers1 = len(layer_names_model1)
+    n_layers2 = len(layer_names_model2)
+    matrix = np.zeros((n_layers1, n_layers2))
+
+    for i in range(n_layers1):
+        for j in range(n_layers2):
+            similarity = cka_results[i, j]  # Access similarity directly from the ndarray
+            matrix[i, j] = np.nan_to_num(similarity)  # Handle NaN or Inf values
+
+    df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
+
+    # Plot the heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
+    plt.title(f'CKA Similarity Heatmap ({title1} vs {title2} )')
+    plt.xlabel(f'{title2}')
+    plt.ylabel(f'{title1}')
+    plt.show()
+
 
             
 
