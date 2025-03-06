@@ -1,23 +1,4 @@
-import numpy as np
-import torch
-import torch.nn as nn
-import matplotlib.pyplot as plt
-import seaborn as sns
-from shallow_fbcsp import ShallowFBCSPNet
-from braindecode.models import EEGConformer
-import Attention_models
-import importlib
-import pandas as pd
-from collections import OrderedDict
-import math
-import pickle
-import os
-from typing import Type,Optional
-from itertools import product
-import collapsed_shallow_fbscp
-import torch.nn.functional as F
-
-
+from imports import *
 # CKA math
 
 def linear_kernel(X):
@@ -400,8 +381,39 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
     plt.xlabel(f'{title2}')
     plt.ylabel(f'{title1}')
     plt.show()
+    
+    
+def compute_cka_changes(cka_results):
+    # Create an empty matrix of the same size as cka_results
+    diff_matrix = np.zeros_like(cka_results)
 
 
+    # Compute the difference only for the diagonal elements
+    for i in range(1, cka_results.shape[0]):
+        diff_matrix[i, i] = abs(cka_results[i, i] - cka_results[i-1, i-1])
+
+
+    return diff_matrix
+
+def display_differences_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
+    n_layers1 = len(layer_names_model1)
+    n_layers2 = len(layer_names_model2)
+    matrix = np.zeros((n_layers1, n_layers2))
+
+    for i in range(n_layers1):
+        for j in range(n_layers2):
+            similarity = cka_results[i, j]  # Access similarity directly from the ndarray
+            matrix[i, j] = np.nan_to_num(similarity)  # Handle NaN or Inf values
+
+    df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
+
+    # Plot the heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True)
+    plt.title(f'CKA Similarity Heatmap ({title1} vs {title2} )')
+    plt.xlabel(f'{title2}')
+    plt.ylabel(f'{title1}')
+    plt.show()
             
 
             
