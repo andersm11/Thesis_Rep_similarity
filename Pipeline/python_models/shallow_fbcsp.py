@@ -9,7 +9,7 @@ from torch.nn import init
 from braindecode.models.base import EEGModuleMixin
 from braindecode.models.functions import square, squeeze_final_output
 from braindecode.models.modules import CombinedConv, Ensure4d, Expression
-from safe_log import SafeLog
+from .safe_log import SafeLog
 
 
 class ShallowFBCSPNet(EEGModuleMixin, nn.Sequential):

@@ -8,7 +8,7 @@ def linear_kernel(X):
 def centering_matrix(K):
     """Apply centering to the kernel matrix."""
     n = K.shape[0]
-    H = torch.eye(n) - (1.0 / n) * torch.ones((n, n), device=K.device)
+    H = torch.eye(n,device=K.device) - (1.0 / n) * torch.ones((n, n), device=K.device)
     return H @ K @ H  # Centered kernel matrix
 
 def compute_hsic(K_x, K_y):
@@ -70,6 +70,7 @@ def load_model(
             return model
     else:
         model = torch.load(full_model_path,weights_only = False,map_location=torch.device('cpu'))
+
         return model
     
     
@@ -187,7 +188,6 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
             kernel_block = batch_activations @ batch_activations_transpose.T
             full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block
             full_kernel[start_idx_row:end_idx_row, start_idx_col:end_idx_col] = kernel_block.T  # Use symmetry
-
     return full_kernel.cpu()
 
 
@@ -250,10 +250,13 @@ def compute_multi_model_kernels(
     total_nr_batches = math.ceil(total_samples / batch_size)
     final_layer_names=[]
     final_model_names=[]
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
     for model_file in model_files:
         if not model_file.endswith('state.pth'):
             model_name, loss, seed = model_file.rsplit('_', 2)
             model = load_model(model_file, models_directory)
+            model.to(device)
             model.eval()
             
             activation_dir = os.path.join(activations_root_directory, model_name, f"{loss}_{seed}")
@@ -293,24 +296,28 @@ def compute_cross_model_cka(root_dir: str):
     Returns:
         np.array: A 2D NumPy array representing the CKA similarity matrix.
     """
+    # Set device to GPU if available, otherwise fallback to CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     model_dirs = sorted([os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))])
     if len(model_dirs) != 2:
         raise ValueError("Expected exactly two model type directories in the root directory.")
 
     model_type1_kernels = []  # For the first model type
     model_type2_kernels = []  # For the second model type
-    model_name1 =""
+    model_name1 = ""
     model_name2 = ""
+
     for i, model_dir in enumerate(model_dirs):
         for filename in os.listdir(model_dir):
             model_path = os.path.join(model_dir, filename)
-            kernel = torch.load(model_path)  # Load kernel dictionary
+            kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
 
             if i == 0:
                 model_type1_kernels.append(kernel)  # For the first model type
-                _ , model_name1 = model_dir.rsplit('/',1)
+                _, model_name1 = model_dir.rsplit('/', 1)
             else:
-                _ , model_name2 = model_dir.rsplit('/',1)
+                _, model_name2 = model_dir.rsplit('/', 1)
                 model_type2_kernels.append(kernel)  # For the second model type
 
     cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
@@ -324,6 +331,9 @@ def compute_cross_model_cka(root_dir: str):
         for j, kernel_B in enumerate(model_type2_kernels):
             for layer1, K_x in kernel_A.items():
                 for layer2, K_y in kernel_B.items():
+                    # Move kernels to GPU if available
+                    K_x, K_y = K_x.to(device), K_y.to(device)
+                    
                     cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
                     idx1 = layer1_to_idx[layer1]
                     idx2 = layer2_to_idx[layer2]
