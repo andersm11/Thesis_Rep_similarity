@@ -108,6 +108,8 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
     def get_activation(name):
         def hook(model, input, output):
+            if isinstance(output, tuple):  
+                output = output[0]  # Extract only the first element (LSTM output)
             activations[name] = output.detach()
         return hook
 
@@ -342,13 +344,13 @@ def compute_cross_model_cka(root_dir: str):
                     print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
             
         cka_inner /= len(model_type2_kernels)
-        
+        print(len(model_type2_kernels))
         cka_results += cka_inner
         
         print(f"Avg CKA result for kernel {i}: {cka_inner}")
 
     cka_results /= len(model_type1_kernels)
-
+    print(len(model_type1_kernels))
     return cka_results  # Return the CKA similarity matrix
 
 

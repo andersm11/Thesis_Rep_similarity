@@ -10,18 +10,19 @@ use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
 X = fix_dataset_shape(load_dataset("test_set.pkl","Datasets/")).to(device)
 layer_names=["temporal","spatial_attention","pool","spatial","lstm"]
-batch_size = 64
-n_batches = 12
+batch_size = 128
+n_batches = 8
 model_layer_names,model_names = compute_multi_model_kernels(model_direc,
                             activation_direc,
                             kernel_direc,X,
                             layer_names=layer_names,
                             batch_size=batch_size,
                             n_batches=n_batches)
-cka_results = compute_cross_model_cka("kernels/")
-# cka_results = np.array([[0.06508174 0.09691181 0.35968925]
-#  [0.0248908  0.03481389 0.34109004]
-#  [0.01694607 0.02389902 0.35218104]])
+#cka_results = compute_cross_model_cka("kernels/")
+cka_results = np.array([[0.49786895, 0.78642032 ,0.20385455],
+ [0.26596813 ,0.49505627, 0.26299654],
+ [0.09610939, 0.18555234, 0.4885796 ]]
+)
 print("final:_", cka_results)
 os.makedirs("ckaResults", exist_ok=True)
 np.save("ckaResults/cka_results.npy", cka_results) 
