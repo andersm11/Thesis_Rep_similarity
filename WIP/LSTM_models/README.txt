@@ -1,0 +1,1 @@
+ALL MODELS IN HERE HAVE: 64 hidden, 2 layers in the LSTM. Maybe effect (Not on acc)? probably not

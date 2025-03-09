@@ -26,7 +26,7 @@ def compute_hsic(K_x, K_y):
     """
     K_x_centered = centering_matrix(K_x)
     K_y_centered = centering_matrix(K_y)
-    hsic_value = np.trace(K_x_centered @ K_y_centered) / ((K_x.shape[0] - 1) ** 2)
+    hsic_value = torch.trace(K_x_centered @ K_y_centered) / ((K_x.shape[0] - 1) ** 2)
     return hsic_value
   
 def CKA(K_x,K_y):

@@ -19,7 +19,7 @@ class LSTM(nn.Module):
 
 
 class ShallowLSTMNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=1, kernel_size=25, pool_size=100, hidden_size=64, nr_layers=2):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=1, kernel_size=25, pool_size=100, hidden_size=22, nr_layers=1):
         super(ShallowLSTMNet, self).__init__()
         
         

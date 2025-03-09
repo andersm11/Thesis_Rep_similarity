@@ -19,9 +19,9 @@ model_layer_names,model_names = compute_multi_model_kernels(model_direc,
                             batch_size=batch_size,
                             n_batches=n_batches)
 cka_results = compute_cross_model_cka("kernels/")
-# cka_results = np.array([[0.06535026, 0.10508258 ,0.35304275],
-#  [0.02508712, 0.04297113, 0.3357947 ],
-#  [0.01698163, 0.02979681, 0.34033636]])
+# cka_results = np.array([[0.06508174 0.09691181 0.35968925]
+#  [0.0248908  0.03481389 0.34109004]
+#  [0.01694607 0.02389902 0.35218104]])
 print("final:_", cka_results)
 os.makedirs("ckaResults", exist_ok=True)
 np.save("ckaResults/cka_results.npy", cka_results) 

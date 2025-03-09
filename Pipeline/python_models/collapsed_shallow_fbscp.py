@@ -63,10 +63,10 @@ class ShallowFBCSPNet(nn.Module):
         #     f'subj-{i}': nn.Conv2d(1, num_kernels, (1, kernel_size))
         #     for i in range(n_subjs)
         # })
-        self.mini_pool = nn.AvgPool2d((1, 2))
+        self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.spatial = nn.Conv2d(num_kernels, num_kernels, (n_chans, 1))
         self.pool = nn.AvgPool2d((1, pool_size))
-        self.batch_norm = nn.BatchNorm2d(num_kernels)
+        
         self.dropout = nn.Dropout(dropout)
         self.fc = nn.LazyLinear(n_outputs)
 
@@ -74,8 +74,6 @@ class ShallowFBCSPNet(nn.Module):
         x = torch.unsqueeze(input, dim=1)
         #subj_id = subject[0].item()
         x = self.temporal(x)
-        if apply_pooling:
-            x = self.mini_pool(x)
         # x = self.temporal_layers[f'subj-{subj_id}'](x)
         x = self.spatial(x)
         x = F.elu(x)
