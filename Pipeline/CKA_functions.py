@@ -112,9 +112,12 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
                 output = output[0]  # Extract only the first element (LSTM output)
             activations[name] = output.detach()
         return hook
-
+    #print(layer_names)
     for name, layer in model.named_modules():
+        #print("name:",name)
         if name in layer_names:
+            
+            #print("name is in layers")
             layer.register_forward_hook(get_activation(name))
             found_layer_names.append(name)
 
@@ -258,6 +261,7 @@ def compute_multi_model_kernels(
         if not model_file.endswith('state.pth'):
             model_name, loss, seed = model_file.rsplit('_', 2)
             model = load_model(model_file, models_directory)
+            print(model)
             model.to(device)
             model.eval()
             
