@@ -18,17 +18,17 @@ model_layer_names,model_names = compute_multi_model_kernels(model_direc,
                             layer_names=layer_names,
                             batch_size=batch_size,
                             n_batches=n_batches)
-cka_results = compute_cross_model_cka("kernels/")
-# cka_results = np.array([[0.80557233, 0.87419916, 0.10234219],
-#  [0.72861162, 0.83129813, 0.08842701],
-#  [0.1134764,  0.11809263, 0.62570892]]
-# )
-print("final:_", cka_results)
-os.makedirs("ckaResults", exist_ok=True)
-np.save("ckaResults/cka_results.npy", cka_results) 
-np.savetxt("ckaResults/cka_results.csv", cka_results, delimiter=",")
-display_cka_matrix(cka_results,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
-cka_differences =compute_cka_changes(cka_results)
-print("differences:",cka_differences)
+# cka_results = compute_cross_model_cka("kernels/")
+# # cka_results = np.array([[0.80557233, 0.87419916, 0.10234219],
+# #  [0.72861162, 0.83129813, 0.08842701],
+# #  [0.1134764,  0.11809263, 0.62570892]]
+# # )
+# print("final:_", cka_results)
+# os.makedirs("ckaResults", exist_ok=True)
+# np.save("ckaResults/cka_results.npy", cka_results) 
+# np.savetxt("ckaResults/cka_results.csv", cka_results, delimiter=",")
+# display_cka_matrix(cka_results,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
+# cka_differences =compute_cka_changes(cka_results)
+# print("differences:",cka_differences)
 #display_differences_matrix(cka_differences,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
 
