@@ -1,4 +1,4 @@
-from CKA_functions import compute_multi_model_kernels,compute_cka_changes,display_differences_matrix
+from CKA_functions import compute_all_model_kernels,compute_all_model_CKA,load_model_metadata,plot_cka_heatmaps
 from CKA_functions import load_dataset,fix_dataset_shape,compute_cross_model_cka,display_cka_matrix
 import numpy as np
 import os
@@ -8,16 +8,17 @@ activation_direc = "activations"
 kernel_direc = "kernels"
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
-X = fix_dataset_shape(load_dataset("test_set.pkl","Datasets/")).to(device)
-layer_names=["temporal","spatial_attention","pool","spatial","lstm","temporal_attention"]
+#X = fix_dataset_shape(load_dataset("test_set.pkl","Datasets/")).to(device)
+layer_names=["spatio_temporal","pool","fc","temporal","spatial","lstm","RNN","temporal_attention"]
 batch_size = 128
 n_batches = 8
-model_layer_names,model_names = compute_multi_model_kernels(model_direc,
-                            activation_direc,
-                            kernel_direc,X,
-                            layer_names=layer_names,
-                            batch_size=batch_size,
-                            n_batches=n_batches)
+# compute_all_model_kernels(model_direc,
+#                             activation_direc,
+#                             kernel_direc,X,
+#                             layer_names=layer_names,
+#                             batch_size=batch_size,
+#                             n_batches=n_batches)
+#compute_all_model_CKA(kernel_direc,"cka_results")
 # cka_results = compute_cross_model_cka("kernels/")
 # # cka_results = np.array([[0.80557233, 0.87419916, 0.10234219],
 # #  [0.72861162, 0.83129813, 0.08842701],
@@ -31,4 +32,6 @@ model_layer_names,model_names = compute_multi_model_kernels(model_direc,
 # cka_differences =compute_cka_changes(cka_results)
 # print("differences:",cka_differences)
 #display_differences_matrix(cka_differences,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
+plot_cka_heatmaps("cka_results","kernels")
+
 

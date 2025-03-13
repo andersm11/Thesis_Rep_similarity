@@ -7,12 +7,9 @@ class ShallowLSTMNet(nn.Module):
         super(ShallowLSTMNet, self).__init__()
         
         self.lstm = nn.LSTM(input_size=n_chans, hidden_size=hidden_size, num_layers=nr_layers, batch_first=True, bidirectional=True)
-        self.norm_lstm = nn.LayerNorm(2 * hidden_size)
         self.spatial = nn.Conv1d(in_channels=2 * hidden_size, out_channels=num_kernels, kernel_size=kernel_size, stride=1, padding=kernel_size // 2)
-        
-        self.pool = nn.AvgPool1d(kernel_size=pool_size, stride=pool_size)
-
         self.batch_norm = nn.BatchNorm1d(num_kernels)
+        self.pool = nn.AvgPool1d(kernel_size=pool_size, stride=pool_size)
 
         self.dropout = nn.Dropout(dropout)
 

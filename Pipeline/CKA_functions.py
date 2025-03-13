@@ -1,4 +1,11 @@
 from imports import *
+import python_models.collapsed_shallow_fbscp
+import json
+import os
+import itertools
+import numpy as np
+import logging
+
 # CKA math
 
 def linear_kernel(X):
@@ -291,6 +298,40 @@ def compute_multi_model_kernels(
     return final_layer_names, final_model_names
             
             
+def compute_all_model_kernels(
+    target_directory: str,
+    activations_root_directory: str,
+    kernels_directory: str,
+    input_data: torch.Tensor,
+    layer_names: list[str],
+    use_state: bool = False,
+    batch_size: int = 128,
+    n_batches: int = 1,
+    use_cuda: bool = False
+):
+    model_directories = os.listdir(target_directory)
+    kwargs = {
+        "activations_root_directory": activations_root_directory,
+        "kernels_directory": kernels_directory,
+        "input_data": input_data,
+        "layer_names": layer_names,
+        "use_state": use_state,
+        "batch_size": batch_size,
+        "n_batches": n_batches,
+        "use_cuda": use_cuda
+    }
+    for direc in model_directories:
+        model_path = os.path.join(target_directory,direc)
+        layer_list,model_list = compute_multi_model_kernels(model_path, **kwargs)
+        print(layer_list)
+        print("model list: ",model_list)
+        model_name = model_list[0]
+        kernel_specific_path = os.path.join(kernels_directory,model_name)
+        with open(os.path.join(kernel_specific_path, f"{direc}_list1.json"), "w") as f_layer:
+            json.dump(layer_list, f_layer, indent=4)
+        with open(os.path.join(kernel_specific_path, f"{direc}_list2.json"), "w") as f_model:
+            json.dump(model_list, f_model, indent=4)
+    
 
 def compute_cross_model_cka(root_dir: str):
     """
@@ -358,6 +399,127 @@ def compute_cross_model_cka(root_dir: str):
     return cka_results  # Return the CKA similarity matrix
 
 
+def compute_all_model_CKA(root_dir: str, output_dir: str):
+    """
+    Computes CKA between models in different folders under the root directory.
+    Each folder represents a model architecture and contains .pth files (kernels).
+    
+    The function iterates through each pair of folders, computes CKA, and saves the results in the output directory.
+    If the output directory does not exist, it is created.
+    """
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Configure logging
+    log_file = os.path.join(output_dir, 'cka_computation.log')
+    logging.basicConfig(filename=log_file, 
+                        level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    logging.info("Starting CKA computation for models in %s", root_dir)
+    
+    # Get all folders in the root directory
+    model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
+    model_names = [os.path.basename(d) for d in model_dirs]  # Extract folder names
+    
+    # Iterate over all unique pairs of model directories
+    for model_dir1, model_dir2 in itertools.combinations(model_dirs, 2):
+        model1 = os.path.basename(model_dir1)
+        model2 = os.path.basename(model_dir2)
+        
+        logging.info("Computing CKA between %s and %s", model1, model2)
+        
+        print(f"Computing CKA between {model1} and {model2}...")
+        
+        # Compute cross-model CKA
+        cka_results = compute_cross_model_CKA(model_dir1, model_dir2)  # Assumed function
+        
+        # Save results to a file in the output directory
+        result_filename = f"{model1}_vs_{model2}.npy"
+        result_path = os.path.join(output_dir, result_filename)
+        np.save(result_path, cka_results)
+        
+        logging.info("Saved CKA results to %s", result_path)
+        print(f"Saved results to {result_path}")
+    
+    logging.info("CKA computation completed.")
+
+    
+
+
+def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
+    # Set device to GPU if available, otherwise fallback to CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model_type1_kernels = []  # For the first model type
+    model_type2_kernels = []  # For the second model type
+    model_name1 = ""
+    model_name2 = ""
+    print(model_dir1)
+    print(model_dir2)
+
+    for filename in os.listdir(model_dir1):
+        if not filename.endswith('.pth'):
+            continue
+        model_path = os.path.join(model_dir1, filename)
+        print(model_path)
+        kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        model_type1_kernels.append(kernel)  # For the first model type
+        try:
+            _, model_name1 = model_dir1.rsplit('/', 1)
+        except Exception as e:
+            print(e)
+            print("trying different slash")
+            _, model_name1 = model_dir1.rsplit('\\',1)
+            
+    for filename in os.listdir(model_dir2):
+        if not filename.endswith('.pth'):
+            continue
+        model_path = os.path.join(model_dir2, filename)
+        print(model_path)
+        kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        try:
+            _, model_name2 = model_dir2.rsplit('/', 1)
+        except Exception as e:
+            print(e)
+            print("trying different slash")
+            _, model_name2 = model_dir2.rsplit('\\',1)
+        model_type2_kernels.append(kernel)  # For the second model type
+
+    cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
+
+    layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type1_kernels[0].keys())}
+    layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type2_kernels[0].keys())}
+
+    for i, kernel_A in enumerate(model_type1_kernels):
+        cka_inner = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))  # Initialize inner CKA matrix for each kernel_A
+        
+        for j, kernel_B in enumerate(model_type2_kernels):
+            for layer1, K_x in kernel_A.items():
+                for layer2, K_y in kernel_B.items():
+                    # Move kernels to GPU if available
+                    K_x, K_y = K_x.to(device), K_y.to(device)
+                    
+                    cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
+                    idx1 = layer1_to_idx[layer1]
+                    idx2 = layer2_to_idx[layer2]
+                    
+                    cka_inner[idx1, idx2] += cka_value
+                    print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
+            
+        cka_inner /= len(model_type2_kernels)
+        print(len(model_type2_kernels))
+        cka_results += cka_inner
+        
+        print(f"Avg CKA result for kernel {i}: {cka_inner}")
+
+    cka_results /= len(model_type1_kernels)
+    print(len(model_type1_kernels))
+    return cka_results  # Return the CKA similarity matrix
+    
+
+
 def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
     n_layers1 = len(layer_names_model1)
     n_layers2 = len(layer_names_model2)
@@ -406,6 +568,146 @@ def display_differences_matrix(cka_results, layer_names_model1: list[str], layer
     plt.xlabel(f'{title2}')
     plt.ylabel(f'{title1}')
     plt.show()
+    
+import os
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+    
+def load_model_metadata(kernel_dir):
+    """
+    Loads model layer names and formatted model names from JSON files in the kernel directory.
+    
+    Returns:
+        - model_layers: Dict mapping model names to their layer names.
+        - model_display_names: Dict mapping model names to formatted display names.
+    """
+    model_layers = {}
+    model_display_names = {}
+
+    for model_name in os.listdir(kernel_dir):
+        model_path = os.path.join(kernel_dir, model_name)
+        if os.path.isdir(model_path):
+            # Remove '_model' from model_name if it's in the name
+            try:
+                model_name_without_suffix, _ = model_name.split('_',1)
+            except Exception as e:
+                print("cannot split. trying without")
+                model_name_without_suffix = model_name
+            
+            json_file_name1 = f'{model_name_without_suffix}_list1.json'
+            json_file_name2 = f'{model_name_without_suffix}_list2.json'
+            print(f"Looking for file: {json_file_name1}")
+
+            try:
+                with open(os.path.join(model_path, json_file_name1), 'r') as f_layer:
+                    model_layers[model_name] = json.load(f_layer)
+
+                with open(os.path.join(model_path, json_file_name2), 'r') as f_name:
+                    model_display_names[model_name] = json.load(f_name)
+            except FileNotFoundError as e:
+                print(f"Warning: Missing JSON files for {model_name}. Skipping.")
+    return model_layers, model_display_names
+
+
+def plot_cka_heatmaps(cka_results_dir: str, kernel_dir: str):
+    """
+    Loads all CKA results from the given directory and visualizes them as heatmaps.
+    
+    Each row in the final figure represents one model compared to all other models.
+    """
+    # Load metadata (layer names & model display names)
+    model_layers, model_display_names = load_model_metadata(kernel_dir)
+    # Collect available comparisons
+    comparison_files = [f for f in os.listdir(cka_results_dir) if f.endswith('.npy')]
+
+    # Extract unique model names and group comparisons by model
+    model_comparisons = {}
+
+    for file in comparison_files:
+        parts = file.replace('.npy', '').split('_vs_')
+        if len(parts) == 2:
+            model1, model2 = parts
+            # Group comparisons for each model
+            if model1 not in model_comparisons:
+                model_comparisons[model1] = []
+            if model2 not in model_comparisons:
+                model_comparisons[model2] = []
+            
+            model_comparisons[model1].append((model2, file))
+            model_comparisons[model2].append((model1, file))
+    print("model_comp:",model_comparisons)
+    # Sort the model names for consistent ordering
+    model_names = sorted(model_comparisons.keys())
+    print("model_names:",model_names)
+    # Plot heatmaps for each model comparison, one row at a time
+    for i, model1 in enumerate(model_names):
+        comparisons = model_comparisons[model1]
+        prime_model_len = len(model_layers[model1][0])
+        # Plot heatmaps for each comparison
+        for j, (model2, file) in enumerate(comparisons):
+            file_path = os.path.join(cka_results_dir, file)
+            cka_matrix = np.load(file_path)  # Load CKA result
+            print("filepath:",file_path)
+            print(cka_matrix)
+            # Get model display names and layers
+            title1 = model_display_names.get(model1, model1)
+            title2 = model_display_names.get(model2, model2)
+            
+            if (prime_model_len !=cka_matrix.shape[0]):
+                cka_matrix = cka_matrix.transpose()
+                
+            layers1 = model_layers.get(model1, [f"Layer {i}" for i in range(cka_matrix.shape[0])])[0]
+            layers2 = model_layers.get(model2, [f"Layer {i}" for i in range(cka_matrix.shape[1])])[0]
+            # Ensure they are strings, not lists
+            if isinstance(title1, list):
+                title1 = title1[0]
+            if isinstance(title2, list):
+                title2 = title2[0]
+            # Display CKA matrix using the helper function
+            #print(title1)
+            print(prime_model_len ," vs ", len(layers1), " vs ", len(layers2))
+            print(prime_model_len, " vs ", cka_matrix.shape[0])
+            
+            print(model1)
+            print(model2)
+            display_cka_matrix(cka_matrix, layers1, layers2, title1, title2,"cka_heatmaps")
+            
+            
+def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str], title1: str, title2: str, output_folder):
+    # Ensure the output directory exists
+    os.makedirs(output_folder, exist_ok=True)
+
+    n_layers1 = len(layer_names_model1)
+    n_layers2 = len(layer_names_model2)
+    matrix = np.zeros((n_layers1, n_layers2))
+    # print(cka_results)
+    # print(title1)
+    # print(layer_names_model1)
+    # print(n_layers1)
+    # print(title2)
+    # print(layer_names_model2)
+    # print(n_layers2)
+    for i in range(n_layers1):
+        for j in range(n_layers2):
+            similarity = cka_results[i, j]  # Access similarity directly from the ndarray
+            matrix[i, j] = np.nan_to_num(similarity)  # Handle NaN or Inf values
+
+    df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
+
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
+    plt.title(f'CKA Similarity Heatmap ({title1} vs {title2})')
+    plt.xlabel(f'{title2}')
+    plt.ylabel(f'{title1}')
+    
+    # Save the heatmap
+    filename = f"{title1}_vs_{title2}.png".replace(" ", "_")  # Replace spaces to avoid issues
+    filepath = os.path.join(output_folder, filename)
+    plt.savefig(filepath, dpi=300, bbox_inches="tight")
+    plt.close()  # Close the figure to free memory
             
 
             

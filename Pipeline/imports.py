@@ -15,11 +15,11 @@ import pickle
 import os
 from typing import Type,Optional
 from itertools import product
-import collapsed_shallow_fbscp
+import python_models.collapsed_shallow_fbscp
 import torch.nn.functional as F
 import sys
 import os
 from concurrent.futures import ThreadPoolExecutor
-import LSTM_model 
+import python_models.LSTM_model 
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
