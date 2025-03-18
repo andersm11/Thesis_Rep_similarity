@@ -130,11 +130,8 @@ class TemporalAttention(nn.Module):
         out = torch.einsum("bcs,bts->btc", attn_weights, value)
    
         out = out.reshape(B * temp_out_channels, time_steps,spat_channels)
-        print("out:",out.shape)
         out = self.out_conv(out)
-        print(out.shape)
         out = out + x_reshaped 
-        print(out.shape)
         out = out.view(B, temp_out_channels, spat_channels, time_steps)
         return out
 

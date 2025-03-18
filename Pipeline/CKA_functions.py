@@ -549,7 +549,7 @@ def compute_cka_changes(cka_results):
 
     return diff_matrix
 
-def display_differences_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
+def display_differences_matrix_og(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
     n_layers1 = len(layer_names_model1)
     n_layers2 = len(layer_names_model2)
     matrix = np.zeros((n_layers1, n_layers2))

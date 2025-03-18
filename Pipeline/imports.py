@@ -6,7 +6,7 @@ import seaborn as sns
 from python_models.shallow_fbcsp import ShallowFBCSPNet
 from braindecode.models import EEGConformer
 import python_models.Attention_temporal_model
-import python_models.Attention_FIRST_model
+#import python_models.Attention_FIRST_model
 import importlib
 import pandas as pd
 from collections import OrderedDict
