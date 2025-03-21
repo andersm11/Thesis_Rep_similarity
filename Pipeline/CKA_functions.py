@@ -97,10 +97,8 @@ def fix_dataset_shape(data):
     return x
 
 
-#Extract activation for a single model
 def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor, output_dir: str, layer_names: list[str], batch_size: int = 128):
     found_layer_names = []
-    # Check if the output directory exists and is not empty
     if os.path.exists(output_dir) and os.listdir(output_dir):
         print(f"Output directory {output_dir} is not empty, assuming kernel already computed. Returning found layer names.")
         for name, layer in model.named_modules():
@@ -119,12 +117,8 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
                 output = output[0]  # Extract only the first element (LSTM output)
             activations[name] = output.detach()
         return hook
-    #print(layer_names)
     for name, layer in model.named_modules():
-        #print("name:",name)
         if name in layer_names:
-            
-            #print("name is in layers")
             layer.register_forward_hook(get_activation(name))
             found_layer_names.append(name)
 
@@ -137,11 +131,9 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
             # Save activations after each batch
             for name, activation in activations.items():
-                batch_idx = i // batch_size + 1  # This determines the batch number
+                batch_idx = i // batch_size + 1  
                 print(f"saving: {name}_batch_{batch_idx}.pt")
                 torch.save(activation, os.path.join(output_dir, f"{name}_batch_{batch_idx}.pt"))
-            
-            # Clear activations list after saving
             activations.clear()
             torch.cuda.empty_cache()
             
@@ -243,8 +235,6 @@ def compute_full_kernels(layer_names: list[str], total_nr_batches: int, batch_si
     print(f"Added empty 'done' file to {load_dir}")
 
 
-
-#compute kernels for all models in directory
 def compute_multi_model_kernels(
     models_directory: str,
     activations_root_directory: str,
@@ -421,10 +411,9 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
     
     # Get all folders in the root directory
     model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
-    model_names = [os.path.basename(d) for d in model_dirs]  # Extract folder names
-    
+
     # Iterate over all unique pairs of model directories
-    for model_dir1, model_dir2 in itertools.combinations(model_dirs, 2):
+    for model_dir1, model_dir2 in itertools.product(model_dirs, repeat=2):
         model1 = os.path.basename(model_dir1)
         model2 = os.path.basename(model_dir2)
         
@@ -444,8 +433,7 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
         print(f"Saved results to {result_path}")
     
     logging.info("CKA computation completed.")
-
-    
+ 
 
 
 def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
@@ -673,27 +661,21 @@ def plot_cka_heatmaps(cka_results_dir: str, kernel_dir: str):
             
             print(model1)
             print(model2)
+            print("display")
             display_cka_matrix(cka_matrix, layers1, layers2, title1, title2,"cka_heatmaps")
             
             
 def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str], title1: str, title2: str, output_folder):
-    # Ensure the output directory exists
     os.makedirs(output_folder, exist_ok=True)
 
     n_layers1 = len(layer_names_model1)
     n_layers2 = len(layer_names_model2)
     matrix = np.zeros((n_layers1, n_layers2))
-    # print(cka_results)
-    # print(title1)
-    # print(layer_names_model1)
-    # print(n_layers1)
-    # print(title2)
-    # print(layer_names_model2)
-    # print(n_layers2)
+
     for i in range(n_layers1):
         for j in range(n_layers2):
-            similarity = cka_results[i, j]  # Access similarity directly from the ndarray
-            matrix[i, j] = np.nan_to_num(similarity)  # Handle NaN or Inf values
+            similarity = cka_results[i, j] 
+            matrix[i, j] = np.nan_to_num(similarity)  
 
     df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
 
@@ -702,12 +684,65 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
     plt.title(f'CKA Similarity Heatmap ({title1} vs {title2})')
     plt.xlabel(f'{title2}')
     plt.ylabel(f'{title1}')
-    
-    # Save the heatmap
-    filename = f"{title1}_vs_{title2}.png".replace(" ", "_")  # Replace spaces to avoid issues
+
+    filename = f"{title1}_vs_{title2}.png".replace(" ", "_") 
     filepath = os.path.join(output_folder, filename)
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
-    plt.close()  # Close the figure to free memory
+    plt.close() 
+
+
+def compose_heat_matrix(result_folder: str, output_folder: str,title:str="cka heatmap"):
+    """
+    Reads CKA results from .npy files in the result_folder, constructs an NxN matrix,
+    and generates a heatmap of CKA values.
+    
+    Args:
+        result_folder (str): Path to the folder containing .npy CKA result files.
+        output_folder (str): Path to save the generated heatmap image.
+    """
+    os.makedirs(output_folder, exist_ok=True)
+    
+    # Read all .npy files in the folder
+    cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
+    
+    # Extract unique model names from filenames
+    model_names = sorted(set(
+        name.split("_vs_")[0] for name in cka_files
+    ).union(
+        name.split("_vs_")[1].replace(".npy", "") for name in cka_files
+    ))  # Maintain normal order for bottom-left to top-right diagonal alignment
+    
+    # Initialize an NxN matrix
+    num_models = len(model_names)
+    cka_matrix = np.zeros((num_models, num_models))
+    
+    # Fill the matrix with CKA values
+    for file in cka_files:
+        model1, model2 = file.replace(".npy", "").split("_vs_")
+        cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Extract scalar value
+        i, j = model_names.index(model1), model_names.index(model2)
+        cka_matrix[i, j] = cka_value
+        cka_matrix[j, i] = cka_value  # Ensure symmetry
+    
+    # Flip matrix to align diagonal from bottom-left to top-right
+    cka_matrix = np.flipud(cka_matrix)
+    model_names_reversed = list(reversed(model_names))
+    
+    # Create heatmap
+    df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
+    
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
+    plt.title(title)
+    plt.xlabel('Model')
+    plt.ylabel('Model')
+    
+    # Save heatmap
+    filepath = os.path.join(output_folder, f"{title}.png")
+    plt.savefig(filepath, dpi=300, bbox_inches="tight")
+    plt.close()
+    
+    print(f"Heatmap saved to {filepath}")
             
 
             

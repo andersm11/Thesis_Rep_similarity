@@ -1,114 +1,91 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# class SpatialAttention(nn.Module):
-#     def __init__(self, in_channels: int):
-#         super().__init__()
-#         self.query = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-#         self.key = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-#         self.value = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
 
-#         self.out_conv = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-#         self.scale = nn.Parameter(torch.tensor(1.0 / (in_channels ** 0.5)))
+def visualize_attention_matrix(x, att_unsq, batch_idx=0, kernel_idx=0):
+    # Extract the attention map for the specific batch and kernel
+    attention_map = att_unsq[batch_idx, kernel_idx, :, :].cpu().detach().numpy()  # Shape: [C, T]
 
-#     def forward(self, x):
-#         B, temp_out_channels, spat_channels, time_steps = x.shape
-#         # Reshape: Merge batch and temp_out_channels -> [B * temp_out_channels, spat_channels, time_steps]
-#         x_reshaped = x.view(B * temp_out_channels, spat_channels, time_steps)
-#         # Compute queries, keys, values
-#         query = self.query(x_reshaped)
-#         key = self.key(x_reshaped)
-#         value = self.value(x_reshaped)
-        
+    # Extract the raw input data for the specific batch and kernel
+    input_data = x[batch_idx, kernel_idx, :, :].cpu().detach().numpy()  # Shape: [C, T]
 
-#         # Scaled dot-product attention
-#         attn_scores = torch.einsum("bct,bcs->bts", query, key) * self.scale  # [B * temp_out_channels, heads, time_steps, time_steps]
-#         attn_weights = torch.softmax(attn_scores, dim=-1)
+    # Plot the Attention Map as a Heatmap
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    sns.heatmap(attention_map, cmap='viridis', cbar=True, xticklabels=range(attention_map.shape[1]),
+                yticklabels=range(attention_map.shape[0]))
+    plt.title(f'Spatial Attention Map (Batch {batch_idx}, Kernel {kernel_idx})')
+    plt.xlabel('Time Steps (T)')
+    plt.ylabel('Electrodes (C)')
 
-#         # Apply attention to values
-#         out = torch.einsum("bts,bcs->bct", attn_weights, value)
+    # Plot the Input Data (Before Attention) as a Heatmap
+    plt.subplot(1, 2, 2)
+    sns.heatmap(input_data, cmap='coolwarm', cbar=True, xticklabels=range(input_data.shape[1]),
+                yticklabels=range(input_data.shape[0]))
+    plt.title(f'Input Data (Batch {batch_idx}, Kernel {kernel_idx})')
+    plt.xlabel('Time Steps (T)')
+    plt.ylabel('Electrodes (C)')
 
-#         # Reshape back: [B * temp_out_channels, spat_channels, time_steps]
-#         out = out.reshape(B * temp_out_channels, spat_channels, time_steps)
+    # Show the plots
+    plt.tight_layout()
+    plt.show()
 
-#         # Apply final transformation
-#         out = self.out_conv(out)
-#         out = out + x_reshaped  # Residual connection
-#         out = out.view(B, temp_out_channels, spat_channels, time_steps)
+    # Compute and Plot the Output (After Applying Attention) as a Heatmap
+    output_data = input_data * attention_map  # Element-wise multiplication (Shape: [C, T])
 
-#         return out
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(output_data, cmap='coolwarm', cbar=True, xticklabels=range(output_data.shape[1]),
+                yticklabels=range(output_data.shape[0]))
+    plt.title(f'Output Data After Applying Attention (Batch {batch_idx}, Kernel {kernel_idx})')
+    plt.xlabel('Time Steps (T)')
+    plt.ylabel('Electrodes (C)')
+    plt.show()
+    
+def visualize_difference(x, out, batch_idx=0, kernel_idx=0):
+    # Extract the raw input data and output data for the specific batch and kernel
+    input_data = x[batch_idx, kernel_idx, :, :].cpu().detach().numpy()  # Shape: [C, T]
+    output_data = out[batch_idx, kernel_idx, :, :].cpu().detach().numpy()  # Shape: [C, T]
+    
+    # Calculate the difference between input and output
+    difference = output_data - input_data
 
-# class SpatialAttention(nn.Module):
-#     def __init__(self, spat_channels: int):
-#         super().__init__()
-#         self.query = nn.Linear(spat_channels, spat_channels)
-#         self.key = nn.Linear(spat_channels, spat_channels)
-#         self.value = nn.Linear(spat_channels, spat_channels)
+    # Plot the Difference Matrix as a Heatmap
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(difference, cmap='coolwarm', cbar=True, xticklabels=range(difference.shape[1]),
+                yticklabels=range(difference.shape[0]))
+    plt.title(f'Difference Between Input and Output (Batch {batch_idx}, Kernel {kernel_idx})')
+    plt.xlabel('Time Steps (T)')
+    plt.ylabel('Electrodes (C)')
+    plt.show()
 
-#         #self.out_conv = nn.Conv1d(1101, 1101, kernel_size=1, bias=False)
-#         self.scale = nn.Parameter(torch.tensor(1.0 / (spat_channels ** 0.5)))
-
-#     def forward(self, x):
-#         B, temp_out_channels, spat_channels, time_steps = x.shape
-#         x_reshaped = x.view(B * temp_out_channels, time_steps, spat_channels)
-#         query = self.query(x_reshaped)
-#         key = self.key(x_reshaped)
-#         value = self.value(x_reshaped)
-#         # print("Q:",query.shape)
-#         # print("K:", key.shape)
-#         # print("V:", value.shape)
-
-#         attn_scores = torch.einsum("btc,btc->bt", query, key) * self.scale  
-#         attn_weights = torch.softmax(attn_scores, dim=-1)
-
-#         out = torch.einsum("bt,btc->btc", attn_weights, value)
-#         #out = out.reshape(B * temp_out_channels, spat_channels, time_steps)
-#         #print("out:",out.shape)
-#         #out = self.out_conv(out)
-#         out = out * x_reshaped
-#         out = out.view(B, temp_out_channels, spat_channels, time_steps)
-#         print(out.shape)
-#         return out
 
 class SpatialAttention(nn.Module):
     def __init__(self, in_channels: int):
         super().__init__()
-        self.query = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-        self.key = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-        self.value = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-
-        self.out_conv = nn.Conv1d(in_channels, in_channels, kernel_size=1, bias=False)
-        self.scale = nn.Parameter(torch.tensor(1.0 / (in_channels ** 0.5)))
+        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1, bias=False)
 
     def forward(self, x):
-        B, temp_out_channels, spat_channels, time_steps = x.shape
-
-        x_reshaped = x.view(B * temp_out_channels, spat_channels, time_steps)
-        query = self.query(x_reshaped)
-        key = self.key(x_reshaped)
-        value = self.value(x_reshaped)
-
-        attn_scores = torch.einsum("bct,bcs->bts", query, key) * self.scale  
-        attn_weights = torch.softmax(attn_scores, dim=-1)
-
-
-        out = torch.einsum("bts,bcs->bct", attn_weights, value)
-   
-        out = out.reshape(B * temp_out_channels, spat_channels, time_steps)
-        out = self.out_conv(out)
-        out = out + x_reshaped 
-        out = out.view(B, temp_out_channels, spat_channels, time_steps)
+        attention_map = self.conv(x) 
+        
+        attention_map = attention_map.view(-1, x.size(2), x.size(3))  # Shape: [B*K, C, T]
+        attention_map = F.softmax(attention_map, dim=1) 
+        attention_map_avg = attention_map.mean(dim=2)  
+        attention_map_avg = attention_map_avg.view(x.size(0), x.size(1), x.size(2))  
+        att_unsq = attention_map_avg.unsqueeze(3)
+        out = x * att_unsq 
         return out
 
 class ShallowAttentionNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=25):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=25):
         super(ShallowAttentionNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1,num_kernels,(1,kernel_size))
-        self.spatial_att = SpatialAttention(n_chans)
+        self.spatial_att = SpatialAttention(num_kernels)
         
 
         self.batch_norm = nn.BatchNorm2d(num_kernels) 
