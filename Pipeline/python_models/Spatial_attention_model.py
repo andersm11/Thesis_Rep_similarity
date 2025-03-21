@@ -71,6 +71,7 @@ class SpatialAttention(nn.Module):
         attention_map = self.conv(x) 
         
         attention_map = attention_map.view(-1, x.size(2), x.size(3))  # Shape: [B*K, C, T]
+        print(attention_map.shape)
         attention_map = F.softmax(attention_map, dim=1) 
         attention_map_avg = attention_map.mean(dim=2)  
         attention_map_avg = attention_map_avg.view(x.size(0), x.size(1), x.size(2))  
@@ -79,7 +80,7 @@ class SpatialAttention(nn.Module):
         return out
 
 class ShallowAttentionNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=25):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=20):
         super(ShallowAttentionNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
@@ -91,7 +92,7 @@ class ShallowAttentionNet(nn.Module):
         self.batch_norm = nn.BatchNorm2d(num_kernels) 
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.LazyLinear(n_outputs)
+        self.fc = nn.Linear(num_kernels * n_chans * ((n_times - kernel_size + 1) // pool_size), n_outputs)
 
     def forward(self, input):
         x = torch.unsqueeze(input,dim=1)
