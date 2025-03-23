@@ -5,6 +5,7 @@ import os
 import itertools
 import numpy as np
 import logging
+import math
 
 # CKA math
 
@@ -743,6 +744,61 @@ def compose_heat_matrix(result_folder: str, output_folder: str,title:str="cka he
     plt.close()
     
     print(f"Heatmap saved to {filepath}")
-            
+    
+    
+def adjacency_matrix_motion():
+    grid = np.array([
+        [ 0,  0,  0,  1,  0,  0,  0],
+        [ 0,  2,  3,  4,  5,  6,  0],
+        [ 7,  8,  9, 10, 11, 12, 13],
+        [ 0, 14, 15, 16, 17, 18,  0],
+        [ 0,  0, 19, 20, 21,  0,  0],
+        [ 0,  0,  0, 22,  0,  0,  0]
+    ])
 
+    positions = {}
+    for i in range(grid.shape[0]):
+        for j in range(grid.shape[1]):
+            if grid[i, j] != 0:
+                positions[grid[i, j]] = (i, j)
+
+    n = len(positions)
+    adj_matrix = np.zeros((n, n), dtype=int)
+
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1),  # up, down, left, right
+                (-1, -1), (-1, 1), (1, -1), (1, 1)]  # diagonals
+
+    for elec, (x, y) in positions.items():
+        for dx, dy in directions:
+            neighbor_x, neighbor_y = x + dx, y + dy
+            if (neighbor_x, neighbor_y) in positions.values():
+                neighbor_elec = [k for k, v in positions.items() if v == (neighbor_x, neighbor_y)][0]
+                adj_matrix[elec - 1, neighbor_elec - 1] = 1  
+                adj_matrix[neighbor_elec - 1, elec - 1] = 1 
+
+    return adj_matrix, positions  
+
+
+def adjacency_matrix_distance_motion(positions, delta=1.0):
+    """Computes the full distance matrix and symmetric adjacency weights."""
+    n = len(positions)
+    distance_matrix = np.zeros((n, n))
+    adj_matrix = np.zeros((n, n))
+
+    # Compute Euclidean distances between ALL pairs of electrodes
+    for i in range(n):
+        for j in range(n):
+            x1, y1 = positions[i + 1]
+            x2, y2 = positions[j + 1]
+            distance_matrix[i, j] = max(abs(x1 - x2), abs(y1 - y2))
+
+    # Compute physical distance and adjacency weights, enforce symmetry
+    for i in range(n):
+        for j in range(i, n):  # Only compute upper triangular matrix (i <= j)
+            if i != j:  # Ignore self-connections
+                d_ij = distance_matrix[i, j] * 3.5  # Convert to physical distance
+                adj_matrix[i, j] = min(1, delta / (d_ij ** 2)) if d_ij > 0 else 0
+                adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
+    
+    return distance_matrix, adj_matrix
             
