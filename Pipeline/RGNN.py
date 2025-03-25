@@ -22,7 +22,7 @@ class SimpleGCNNet(torch.nn.Module):
         """
         super(SimpleGCNNet, self).__init__()
         self.edge_weights = nn.Parameter(edge_weights.float())
-        self.rgnn = SGConv(time_steps,num_hiddens,K=K)
+        self.rgnn = SGConv(time_steps,num_hiddens,K=K) # <- remove self looop?????
         #self.dropout = nn.Dropout(dropout)
             
     def forward(self, x,edge_index, alpha=0):
@@ -33,17 +33,17 @@ class SimpleGCNNet(torch.nn.Module):
     
     
 class ShallowRGNNNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=20,num_hidden=20):
+    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=20,num_hidden=5):
         super().__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
-        self.rgnn = SimpleGCNNet(55,edge_weights,num_hidden)
+        self.rgnn = SimpleGCNNet(55,edge_weights,num_hidden,K=1)
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(4400, n_outputs)
+        self.fc = nn.Linear(1100, n_outputs)
 
 
     def forward(self, input,edge_index):
@@ -53,7 +53,12 @@ class ShallowRGNNNet(nn.Module):
         x = F.elu(x)
         x = self.batch_norm(x)
         x = self.pool(x)
+        
         x = self.rgnn(x,edge_index)
+        #print(x.shape)
+        #x = self.pool(x)
+
+        x = F.elu(x)
         x = x.view(x.size(0), -1)
         x = self.dropout(x)
         x = self.fc(x)

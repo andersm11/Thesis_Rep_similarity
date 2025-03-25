@@ -65,22 +65,37 @@ def visualize_difference(x, out, batch_idx=0, kernel_idx=0):
 class SpatialAttention(nn.Module):
     def __init__(self, in_channels: int):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1, bias=False)
+        #self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=1, bias=False)
+        self.attn_fc = nn.Linear(44, 22)
 
     def forward(self, x):
-        attention_map = self.conv(x) 
-        
-        attention_map = attention_map.view(-1, x.size(2), x.size(3))  # Shape: [B*K, C, T]
+        # Perform MaxPooling and AvgPooling across the time dimension (height dimension)
+        attention_map_maxpool = F.max_pool2d(x, (1, x.size(3)))  # MaxPooling over time (height)
+        attention_map_avgpool = F.avg_pool2d(x, (1,x.size(3)))  # AvgPooling over time (height)
+        print(attention_map_maxpool.shape)
+        print(attention_map_avgpool.shape)
+        # Concatenate the pooled results along the channel dimension (2 * C channels)
+        pooled = torch.cat((attention_map_maxpool, attention_map_avgpool), dim=3)  # [B, 2*C, W]
+
+        # Apply convolution to the concatenated pooled values to generate the attention map
+        pooled = pooled.view(pooled.size(0), pooled.size(1),-1)
+        print("pooled",pooled.shape)
+        #pooled = pooled.view(pooled.size(0), -1)
+        attention_map = self.attn_fc(pooled)
+        #attention_map = self.conv(pooled) 
+        print(attention_map.shape)        
+        #attention_map = attention_map.view(-1, x.size(2), x.size(3)) 
         print(attention_map.shape)
         attention_map = F.softmax(attention_map, dim=1) 
-        attention_map_avg = attention_map.mean(dim=2)  
-        attention_map_avg = attention_map_avg.view(x.size(0), x.size(1), x.size(2))  
+        #attention_map_avg = attention_map.mean(dim=2)  
+        attention_map_avg = attention_map.view(x.size(0), x.size(1), x.size(2))  
         att_unsq = attention_map_avg.unsqueeze(3)
+        #visualize_attention_matrix(x,att_unsq)
         out = x * att_unsq 
         return out
 
 class ShallowAttentionNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=20):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.8, num_kernels=10, kernel_size=25, pool_size=20):
         super(ShallowAttentionNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
@@ -98,6 +113,7 @@ class ShallowAttentionNet(nn.Module):
         x = torch.unsqueeze(input,dim=1)
         #print("after unsqueeze:", x.shape)
         x = self.temporal(x)
+        #x = F.elu(x)
         x = self.spatial_att(x)
 
         x = F.elu(x)

@@ -1,5 +1,4 @@
 from imports import *
-import python_models.collapsed_shallow_fbscp
 import json
 import os
 import itertools
