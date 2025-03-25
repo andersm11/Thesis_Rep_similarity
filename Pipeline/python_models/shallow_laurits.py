@@ -52,17 +52,17 @@ class ShallowFBCSPNet(nn.Module):
         pool_size (int, optional): Size of the pooling window. Default is 100.
     """
 
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=10, kernel_size=25, pool_size=20):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=20):
         super(ShallowFBCSPNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
-        self.spatial = nn.Conv2d(num_kernels, num_kernels*2, (n_chans, 1))
-        self.batch_norm = nn.BatchNorm2d(num_kernels*2)
+        self.spatial = nn.Conv2d(num_kernels, num_kernels, (n_chans, 1))
+        self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(num_kernels*2 * ((n_times - kernel_size + 1) // pool_size), n_outputs)
+        self.fc = nn.Linear(num_kernels * ((n_times - kernel_size + 1) // pool_size), n_outputs)
 
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
