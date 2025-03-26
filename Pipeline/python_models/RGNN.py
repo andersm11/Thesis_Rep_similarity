@@ -42,15 +42,15 @@ class SimpleGCNNet(torch.nn.Module):
             
     def forward(self, x,edge_index, alpha=0):
         #batch_size,K,C,T = x.shape
-        check_values("Edge Weights", self.edge_weights)
-        check_values("before SGConv",x)
+        #check_values("Edge Weights", self.edge_weights)
+        #check_values("before SGConv",x)
         #self.edge_weights[self.edge_weights == 0] = 1e-6
-        print("Input X mean:", x.mean())
-        print("Input X std:", x.std())
+        #print("Input X mean:", x.mean())
+        #print("Input X std:", x.std())
 
         x = self.sgconv(x, edge_index,self.edge_weights)
         #print(edge_index)
-        check_values("after SGConv:",x)
+        #check_values("after SGConv:",x)
        # x = self.dropout(x)
         return x
 
@@ -72,17 +72,17 @@ class ShallowSGCNNet(nn.Module):
     def forward(self, input,edge_index):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
-        if torch.isnan(x).any():
-            print("NaN after temporal conv")
+        # if torch.isnan(x).any():
+        #     print("NaN after temporal conv")
         x = F.elu(x)
         x = self.batch_norm(x)
-        if torch.isnan(x).any():
-            print("NaN after batch norm")
+        # if torch.isnan(x).any():
+        #     print("NaN after batch norm")
         x = self.pool(x)
         
         x = self.sgconv(x,edge_index)
-        if torch.isnan(x).any():
-            print("NaN after RGNN")
+        # if torch.isnan(x).any():
+        #     print("NaN after RGNN")
            
         #print(x.shape)
         #x = self.pool(x)

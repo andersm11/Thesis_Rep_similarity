@@ -4,13 +4,13 @@ from CKA_functions import compose_heat_matrix
 import numpy as np
 import os
 import torch
-model_direc = "models"
-activation_direc = "activations"
-kernel_direc = "kernels"
+model_direc = "../models"
+activation_direc = "../activations"
+kernel_direc = "../kernels"
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
-X = fix_dataset_shape(load_dataset("test_set.pkl","Datasets/")).to(device)
-layer_names=["temporal","lstm","RNN"]
+X = fix_dataset_shape(load_dataset("test_set.pkl","../Datasets/")).to(device)
+layer_names=["spatial","sgconv","spatial_att"]
 batch_size = 128
 n_batches = 8
 # model_layer_names, model_names = compute_multi_model_kernels(model_direc,
@@ -19,12 +19,12 @@ n_batches = 8
 #                             layer_names=layer_names,
 #                             batch_size=batch_size,
 #                             n_batches=n_batches)
-# compute_all_model_kernels(model_direc,
-#                             activation_direc,
-#                             kernel_direc,X,
-#                             layer_names=layer_names,
-#                             batch_size=batch_size,
-#                             n_batches=n_batches)
+compute_all_model_kernels(model_direc,
+                            activation_direc,
+                            kernel_direc,X,
+                            layer_names=layer_names,
+                            batch_size=batch_size,
+                            n_batches=n_batches)
 # compute_all_model_CKA(kernel_direc,"cka_results")
 #cka_results = compute_all_model_CKA(kernel_direc,"cka_temp_results")
 # cka_results = np.array([[0.89855301 ,0.22526194 ,0.11029866, 0.08708372],
@@ -40,6 +40,5 @@ n_batches = 8
 # print("differences:",cka_differences)
 #display_differences_matrix(cka_differences,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
 # plot_cka_heatmaps("cka_results","kernels")
-compose_heat_matrix("cka_results","cka_heatmaps","CKA temp heatmap")
 
 

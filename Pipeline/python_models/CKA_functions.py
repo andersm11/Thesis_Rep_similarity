@@ -10,6 +10,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import seaborn as sns
 from braindecode.models import EEGConformer
+
 #import python_models.Attention_FIRST_model
 import importlib
 import pandas as pd
@@ -140,12 +141,33 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
             found_layer_names.append(name)
 
     model.eval()
+    try:
+        from RGNN import ShallowSGCNNet
+    except ImportError as e:
+        print(e)
+    if isinstance(model, ShallowSGCNNet):
+        adj_m,pos = adjacency_matrix_motion()
+        #print(adj_m)
+        adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=5)
+        threshold = 0  # Adjust as needed
+        source_nodes = []
+        target_nodes = []
 
+        # Iterate over all elements in the distance matrix, including self-loops and duplicates
+        for i in range(dm.shape[0]):
+            for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
+                if dm[i, j] >= threshold:  # If the distance meets the condition
+                    source_nodes.append(i)  # Source node
+                    target_nodes.append(j)  # Target node
+        edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+    
     with torch.no_grad():
         for i in range(0, input_tensor.shape[0], batch_size):
             batch = input_tensor[i:i + batch_size]  # Select current batch
-            _ = model(batch)  # Forward pass through the model
-
+            if isinstance(model,ShallowSGCNNet):
+                _ = model(batch,edge_index)
+            else:
+                _ = model(batch)  # Forward pass through the model
             # Save activations after each batch
             for name, activation in activations.items():
                 batch_idx = i // batch_size + 1  
@@ -399,6 +421,7 @@ def compute_cross_model_cka(root_dir: str):
         print(len(model_type2_kernels))
         cka_results += cka_inner
         
+        
         print(f"Avg CKA result for kernel {i}: {cka_inner}")
 
     cka_results /= len(model_type1_kernels)
@@ -448,6 +471,8 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
         
         logging.info("Saved CKA results to %s", result_path)
         print(f"Saved results to {result_path}")
+        #results = [future.result() for future in futures]
+
     
     logging.info("CKA computation completed.")
  
@@ -496,7 +521,9 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
 
     layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type1_kernels[0].keys())}
     layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type2_kernels[0].keys())}
-
+    if not os.path.exists("cka_csv"):
+        os.makedirs("cka_csv", exist_ok=True)
+    panda_data = []
     for i, kernel_A in enumerate(model_type1_kernels):
         cka_inner = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))  # Initialize inner CKA matrix for each kernel_A
         
@@ -509,6 +536,7 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
                     cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
                     idx1 = layer1_to_idx[layer1]
                     idx2 = layer2_to_idx[layer2]
+                    panda_data.append((layer1,layer2,cka_value))
                     
                     cka_inner[idx1, idx2] += cka_value
                     print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
@@ -517,7 +545,14 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
         print(len(model_type2_kernels))
         cka_results += cka_inner
         
+        
+        
         print(f"Avg CKA result for kernel {i}: {cka_inner}")
+
+    df = pd.DataFrame([(cka_value[0],cka_value[1],cka_value[2]) for cka_value in panda_data],
+                            columns=['Layer1', 'Layer2', 'CKA_Value'])
+
+    df.to_csv(f"cka_csv/CKA_{model_name1}_vs_{model_name2}.csv", sep ="\t", index = False, header = True)
 
     cka_results /= len(model_type1_kernels)
     print(len(model_type1_kernels))
@@ -708,27 +743,33 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
     plt.close() 
 
 
-def compose_heat_matrix(result_folder: str, output_folder: str,title:str="cka heatmap"):
+def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "cka heatmap"):
     """
     Reads CKA results from .npy files in the result_folder, constructs an NxN matrix,
-    and generates a heatmap of CKA values.
+    and generates a heatmap of CKA values, ensuring 'Shallow' appears in the top-right corner.
     
     Args:
         result_folder (str): Path to the folder containing .npy CKA result files.
         output_folder (str): Path to save the generated heatmap image.
+        title (str): Title of the heatmap.
     """
     os.makedirs(output_folder, exist_ok=True)
     
     # Read all .npy files in the folder
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
     
-    # Extract unique model names from filenames
+    # Extract unique model names
     model_names = sorted(set(
         name.split("_vs_")[0] for name in cka_files
     ).union(
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
-    ))  # Maintain normal order for bottom-left to top-right diagonal alignment
-    
+    ))  
+
+    # Ensure 'Shallow' is placed last in the sorted list
+    if "Shallow" in model_names:
+        model_names.remove("Shallow")
+        model_names.append("Shallow")
+
     # Initialize an NxN matrix
     num_models = len(model_names)
     cka_matrix = np.zeros((num_models, num_models))
@@ -740,11 +781,11 @@ def compose_heat_matrix(result_folder: str, output_folder: str,title:str="cka he
         i, j = model_names.index(model1), model_names.index(model2)
         cka_matrix[i, j] = cka_value
         cka_matrix[j, i] = cka_value  # Ensure symmetry
-    
+
     # Flip matrix to align diagonal from bottom-left to top-right
     cka_matrix = np.flipud(cka_matrix)
     model_names_reversed = list(reversed(model_names))
-    
+
     # Create heatmap
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
     
