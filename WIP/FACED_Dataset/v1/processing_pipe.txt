@@ -1,0 +1,11 @@
+Pipeline(steps=[('read_raw', ReadRaw()),
+                ('filter',
+                 FunctionTransformer(func=operator.methodcaller('filter', l_freq=0.01, h_freq=80, method='iir', picks='eeg', verbose=False)))])
+FACED
+Pipeline(steps=[('epochs', EpochFromMetadata(tmax=2, tmin=0)),
+                ('crop', Crop(tmax=2, tmin=0)),
+                ('resample',
+                 FunctionTransformer(func=operator.methodcaller('resample', sfreq=200, verbose=False))),
+                ('standardize', ChannelwiseStandardScaler()),
+                ('data', DataAndMetafromEpochs(tmax=2, tmin=0))])
+windowed: size:2 stride:2
