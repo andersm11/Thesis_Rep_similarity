@@ -153,6 +153,7 @@ def compute_all_model_confusion(models_path: str, output_path: str):
         plot_and_save_overall_accuracy(models_cm_avg,output_path)
         plot_and_save_mislabeling_histograms(models_cm_avg,CLASS_LABELS,output_path)
         plot_and_save_predicted_label_distributions(models_cm_avg,CLASS_LABELS,output_path)
+        plot_and_save_overall_prediction_distributions(models_cm_avg,CLASS_LABELS,output_path)
         f1_scores = compute_f1_scores(models_cm_avg,CLASS_LABELS)
         plot_and_save_f1_scores(f1_scores,output_path)
         save_epi_test(models_cm_avg,output_path)
@@ -391,5 +392,36 @@ def save_epi_test(all_cms,output_path):
         print(summary_table)
         summary_table.to_csv(f"{output_path}/{model_name}_multi_class_metrics.csv", index=False)
 
-
+def plot_and_save_overall_prediction_distributions(models_cm_avg, class_labels, output_path):
+    """Plot and save overall histograms of predicted label distributions for each model."""
+    
+    # Create a directory to save the overall predicted label distributions
+    os.makedirs(os.path.join(output_path, "overall_prediction_distributions"), exist_ok=True)
+    
+    overall_data = []
+    
+    # Iterate through each model and capture overall predicted label distributions
+    for model_name, cm_avg in models_cm_avg.items():
+        # Sum across rows to get total predictions per class
+        total_predictions = cm_avg.sum(axis=0)
+        
+        # Store the predicted counts for each class
+        overall_data.extend([(model_name, class_labels[class_idx], count) 
+                             for class_idx, count in enumerate(total_predictions) if count > 0])
+    
+    # Create a DataFrame for plotting
+    overall_df = pd.DataFrame(overall_data, columns=["Model", "Predicted Label", "Count"])
+    
+    # Plot the histogram of overall predicted label distributions
+    plt.figure(figsize=(10, 6))
+    sns.barplot(data=overall_df, x="Predicted Label", y="Count", hue="Model", errorbar=None)
+    
+    # Labels and title
+    plt.xlabel("Predicted Label")
+    plt.ylabel("Count")
+    plt.title("Overall Predicted Label Distribution Across Models")
+    
+    # Save the plot
+    plt.savefig(os.path.join(output_path, "overall_prediction_distributions", "overall_predicted_distribution.png"), dpi=300)
+    plt.close()
     
