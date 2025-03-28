@@ -52,7 +52,7 @@ class ShallowFBCSPNet(nn.Module):
         pool_size (int, optional): Size of the pooling window. Default is 100.
     """
 
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=20):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=100):
         super(ShallowFBCSPNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
