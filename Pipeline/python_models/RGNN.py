@@ -36,7 +36,7 @@ class SimpleGCNNet(torch.nn.Module):
         super(SimpleGCNNet, self).__init__()
         self.edge_weights = nn.Parameter(edge_weights.float())
         #self.edge_weights.data = torch.clamp(self.edge_weights.data, min=-1, max=1)
-        self.sgconv = SGConv(time_steps, num_hiddens, K=2, add_self_loops=True)
+        self.sgconv = SGConv(time_steps, num_hiddens, K=K, add_self_loops=True)
 
         #self.dropout = nn.Dropout(dropout)
             
@@ -56,17 +56,17 @@ class SimpleGCNNet(torch.nn.Module):
 
 
 class ShallowSGCNNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=20,num_hidden=2):
+    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=10,num_hidden=2):
         super().__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
-        self.sgconv = SimpleGCNNet(55,edge_weights,num_hidden,K=1)
+        self.sgconv = SimpleGCNNet(37,edge_weights,num_hidden,K=1)
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(440, n_outputs)
+        self.fc = nn.Linear(640, n_outputs)
 
 
     def forward(self, input,edge_index):
