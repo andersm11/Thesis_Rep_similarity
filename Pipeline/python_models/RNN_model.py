@@ -17,7 +17,6 @@ class ShallowRNNNet(nn.Module):
         x,_ = self.RNN(x) 
         x = x.permute(0, 2, 1)  
         x = torch.unsqueeze(x, dim=1)  
-        #print(x.shape)
         x = self.spatial(x)
         x = F.elu(x)
         x = self.batch_norm(x)

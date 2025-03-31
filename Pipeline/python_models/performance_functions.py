@@ -195,7 +195,13 @@ def plot_and_save_overall_accuracy(models_cm_avg, output_path):
     
     # Plot overall accuracy comparison
     plt.figure(figsize=(10, 6))
-    sns.barplot(x="Model", y="Accuracy", data=df, hue="Model")
+    ax = sns.barplot(x="Model", y="Accuracy", data=df, hue="Model")
+    for p in ax.patches:
+        height = p.get_height()
+        ax.annotate(f"{height:.2f}", 
+                    (p.get_x() + p.get_width() / 2., height), 
+                    ha='center', va='bottom', 
+                    fontsize=12, fontweight='bold', color='black')
     
     # Labels and title
     plt.xlabel("Model")
@@ -331,7 +337,7 @@ def plot_and_save_f1_scores(f1_scores, output_path):
     
     # Plot the F1-scores for each model
     plt.figure(figsize=(10, 6))
-    ax = sns.barplot(x="Model", y="F1-Score", data=f1_df, color="skyblue", edgecolor="black")
+    ax = sns.barplot(x="Model", y="F1-Score", data=f1_df, hue="Model", edgecolor="black")
     
     # Add value labels on top of bars
     for p in ax.patches:

@@ -35,38 +35,29 @@ class SimpleGCNNet(torch.nn.Module):
         """
         super(SimpleGCNNet, self).__init__()
         self.edge_weights = nn.Parameter(edge_weights.float())
-        #self.edge_weights.data = torch.clamp(self.edge_weights.data, min=-1, max=1)
         self.sgconv = SGConv(time_steps, num_hiddens, K=K, add_self_loops=True)
+        self.epsilon = 1e-6
 
         #self.dropout = nn.Dropout(dropout)
             
-    def forward(self, x,edge_index, alpha=0):
-        #batch_size,K,C,T = x.shape
-        #check_values("Edge Weights", self.edge_weights)
-        #check_values("before SGConv",x)
-        #self.edge_weights[self.edge_weights == 0] = 1e-6
-        #print("Input X mean:", x.mean())
-        #print("Input X std:", x.std())
-
-        x = self.sgconv(x, edge_index,self.edge_weights)
-        #print(edge_index)
-        #check_values("after SGConv:",x)
-       # x = self.dropout(x)
+    def forward(self, x, edge_index, alpha=0):
+        self.edge_weights.data[self.edge_weights.data <= 0] = self.epsilon  
+        x = self.sgconv(x, edge_index, self.edge_weights)
         return x
 
 
 class ShallowSGCNNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=20,num_hidden=2,K=2):
+    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=10,num_hidden=2):
         super().__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
-        self.sgconv = SimpleGCNNet(55,edge_weights,num_hidden,K=K)
+        self.sgconv = SimpleGCNNet(37,edge_weights,num_hidden,K=1)
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(440, n_outputs)
+        self.fc = nn.Linear(640, n_outputs)
 
 
     def forward(self, input,edge_index):
