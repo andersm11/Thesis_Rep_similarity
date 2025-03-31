@@ -1,0 +1,5 @@
+check shallow training
+train SGConv
+Compute CKA temp
+Compute CKA spat
+Go over parameters for spat
