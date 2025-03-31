@@ -142,7 +142,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
     model.eval()
     try:
-        from RGNN import ShallowSGCNNet
+        from SGCN import ShallowSGCNNet
     except ImportError as e:
         print(e)
     if isinstance(model, ShallowSGCNNet):

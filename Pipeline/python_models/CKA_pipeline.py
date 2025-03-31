@@ -9,8 +9,13 @@ activation_direc = "../activations"
 kernel_direc = "../kernels"
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
-X = fix_dataset_shape(load_dataset("test_set.pkl","../Datasets/")).to(device)
-layer_names=["spatial","sgconv","spatial_att"]
+X = torch.load("../Datasets/emotion_test_set.pt")
+X = torch.stack(X)
+
+
+
+
+layer_names=["temporal","lstm","rnn"]
 batch_size = 128
 n_batches = 8
 # model_layer_names, model_names = compute_multi_model_kernels(model_direc,

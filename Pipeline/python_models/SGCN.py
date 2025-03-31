@@ -22,17 +22,6 @@ def check_values(name, tensor):
 
 class SimpleGCNNet(torch.nn.Module):
     def __init__(self, time_steps:int, edge_weights, num_hiddens:int, K=1, dropout=0.5, domain_adaptation=""):
-        """
-            num_nodes: number of nodes in the graph
-            learn_edge_weight: if True, the edge_weight is learnable
-            edge_weight: initial edge matrix
-            num_features: feature dim for each node/channel
-            num_hiddens: a tuple of hidden dimensions
-            num_classes: number of motion classes
-            K: number of layers
-            dropout: dropout rate in final linear layer
-            domain_adaptation: RevGrad
-        """
         super(SimpleGCNNet, self).__init__()
         self.edge_weights = nn.Parameter(edge_weights.float())
         #self.edge_weights.data = torch.clamp(self.edge_weights.data, min=-1, max=1)

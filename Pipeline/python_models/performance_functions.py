@@ -10,7 +10,7 @@ import itertools
 import math
 from torch.utils.data import DataLoader
 from CKA_functions import load_dataset, load_model,adjacency_matrix_motion,adjacency_matrix_distance_motion
-from RGNN import ShallowSGCNNet
+from SGCN import ShallowSGCNNet
 CLASS_LABELS = ["Left Hand", "Right Hand", "Both Feet", "Tongue"]
 
 def get_labels(model,dataloader):
