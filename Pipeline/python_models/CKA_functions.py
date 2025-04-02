@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 from braindecode.models import EEGConformer
 
 #import python_models.Attention_FIRST_model
@@ -29,6 +30,30 @@ from concurrent.futures import ThreadPoolExecutor
 def linear_kernel(X):
     """Computes the linear kernel matrix for X."""
     return torch.matmul(X,X.T)  # Dot product
+
+def angular_kernel(X, Y):
+    """Computes the angular kernel (cosine similarity) between X and Y."""
+    X_norm = X.norm(p=2, dim=1, keepdim=True)  # L2 norm of X
+    Y_norm = Y.norm(p=2, dim=1, keepdim=True)  # L2 norm of Y
+    cosine_similarity = torch.mm(X / X_norm, (Y / Y_norm).T)  # Cosine similarity
+    return cosine_similarity
+
+def rbf_kernel(X,Xt, sigma=1.0):
+    """Computes the RBF (Gaussian) kernel matrix."""
+   # if Xt.shape[0] > X.shape[0]:
+   #     pairwise_sq_dists = torch.cdist(Xt, Xt, p=2) ** 2  # Squared Euclidean distance
+   # else:
+    pairwise_sq_dists = torch.cdist(X, Xt, p=2) ** 2  # Squared Euclidean distance
+    return torch.exp(-pairwise_sq_dists / (2 * sigma ** 2))
+
+def polynomial_kernel(X, Y, degree=2, c=1):
+    """Computes the polynomial kernel matrix."""
+    return (X @ Y.T + c) ** degree
+
+def normalize_kernel(K):
+    """Normalize the kernel matrix by its trace."""
+    trace_K = torch.trace(K)
+    return K / trace_K 
 
 def centering_matrix(K):
     """Apply centering to the kernel matrix."""
@@ -51,7 +76,9 @@ def compute_hsic(K_x, K_y):
     """
     K_x_centered = centering_matrix(K_x)
     K_y_centered = centering_matrix(K_y)
-    hsic_value = torch.trace(K_x_centered @ K_y_centered) / ((K_x.shape[0] - 1) ** 2)
+    K_x_centered_normalized = normalize_kernel(K_x_centered)
+    K_y_centered_normalized = normalize_kernel(K_y_centered)
+    hsic_value = torch.trace(K_x_centered_normalized @ K_y_centered_normalized) / ((K_x.shape[0] - 1) ** 2)
     return hsic_value
   
 def CKA(K_x,K_y):
@@ -228,7 +255,10 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
 
             batch_activations_transpose = torch.cat(batch_activations_transpose_list, dim=0)
 
-            kernel_block = batch_activations @ batch_activations_transpose.T
+            kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=1.0)[:abs(start_idx_col-end_idx_col),:abs(start_idx_row-end_idx_row)]
+            #print("kernel shape:",kernel_block.shape)
+            #print("block shape:",abs(start_idx_col-end_idx_col),abs(start_idx_row-end_idx_row))
+
             full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block
             full_kernel[start_idx_row:end_idx_row, start_idx_col:end_idx_col] = kernel_block.T  # Use symmetry
     return full_kernel.cpu()

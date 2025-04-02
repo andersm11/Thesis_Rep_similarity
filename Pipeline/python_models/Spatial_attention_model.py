@@ -104,11 +104,12 @@ class ShallowAttentionNet(nn.Module):
 
         # **Major change: Reduce FC layer complexity**
         reduced_size = num_kernels * n_chans * ((n_times - kernel_size + 1) // (pool_size*8))
-        self.fc = nn.Linear(960 , n_outputs)  # No dependence on n_chans
+        self.fc = nn.Linear(2420 , n_outputs)  # No dependence on n_chans
 
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
+        x = F.elu(x)
         x = self.spatial_att(x)
 
         x = F.elu(x)
