@@ -15,21 +15,21 @@ X = fix_dataset_shape(load_dataset("test_set.pkl","../Datasets/"))
 
 
 
-layer_names=["sgconv","spatial","pool","fc"]
+layer_names=["temporal","sgconv","spatial","pool","fc"]
 batch_size = 128
-n_batches = 4
+n_batches = 8
 # model_layer_names, model_names = compute_multi_model_kernels(model_direc,
 #                             activation_direc,
 #                             kernel_direc,X,
 #                             layer_names=layer_names,
 #                             batch_size=batch_size,
 #                             n_batches=n_batches)
-# compute_all_model_kernels(model_direc,
-#                             activation_direc,
-#                             kernel_direc,X,
-#                             layer_names=layer_names,
-#                             batch_size=batch_size,
-#                             n_batches=n_batches)
+compute_all_model_kernels(model_direc,
+                            activation_direc,
+                            kernel_direc,X,
+                            layer_names=layer_names,
+                            batch_size=batch_size,
+                            n_batches=n_batches)
 # compute_all_model_CKA(kernel_direc,"cka_results")
 #cka_results = compute_all_model_CKA(kernel_direc,"cka_temp_results")
 # cka_results = np.array([[0.89855301 ,0.22526194 ,0.11029866, 0.08708372],
@@ -44,6 +44,6 @@ n_batches = 4
 # cka_differences =compute_cka_changes(cka_results)
 # print("differences:",cka_differences)
 # display_differences_matrix(cka_differences,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
-plot_cka_heatmaps("cka_results","../kernels")
+#plot_cka_heatmaps("cka_results","../kernels")
 
 

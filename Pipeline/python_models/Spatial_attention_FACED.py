@@ -76,7 +76,7 @@ class SpatialAttention(nn.Module):
  
         attention_map = attention_map.view(-1, x.size(2), x.size(3))  # Shape: [B*K, C, T]
         # **Global Average Pooling over Time**
-        attention_map = F.softmax(attention_map, dim=1) 
+        attention_map =  torch.sigmoid(attention_map)
         attention_map_avg = attention_map.mean(dim=2)  
         attention_map_avg = attention_map_avg.view(x.size(0), x.size(1), x.size(2))  
         #print(attention_map_avg.shape)
@@ -85,18 +85,18 @@ class SpatialAttention(nn.Module):
         x = x * attention_map
 
         # **Apply Pooling**
-        #x = self.pool(x)
+        x = self.pool(x)
 
         return x  # Weighted Feature Maps
 
 class ShallowAttentionNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=20):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=40, kernel_size=25, pool_size=50):
         super(ShallowAttentionNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))  # Reduce num_kernels to 5
-        self.spatial_att = SpatialAttention(num_kernels,pool_size//4)
+        self.spatial_att = SpatialAttention(num_kernels,pool_size//8)
 
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
@@ -104,7 +104,7 @@ class ShallowAttentionNet(nn.Module):
 
         # **Major change: Reduce FC layer complexity**
         reduced_size = num_kernels * n_chans * ((n_times - kernel_size + 1) // (pool_size*8))
-        self.fc = nn.Linear(2420 , n_outputs)  # No dependence on n_chans
+        self.fc = nn.Linear(1280 , n_outputs)  # No dependence on n_chans
 
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)

@@ -27,23 +27,40 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 # CKA math
 
-def linear_kernel(X):
+def linear_kernel(X,Xt):
     """Computes the linear kernel matrix for X."""
-    return torch.matmul(X,X.T)  # Dot product
+    return X @ Xt  # Dot product
 
-def angular_kernel(X, Y):
-    """Computes the angular kernel (cosine similarity) between X and Y."""
-    X_norm = X.norm(p=2, dim=1, keepdim=True)  # L2 norm of X
-    Y_norm = Y.norm(p=2, dim=1, keepdim=True)  # L2 norm of Y
-    cosine_similarity = torch.mm(X / X_norm, (Y / Y_norm).T)  # Cosine similarity
-    return cosine_similarity
+def angular_kernel(X, Xt=None):
+    """Computes the Angular Kernel matrix based on cosine similarity."""
+    # If Xt is None, compute self-kernel
+    if Xt is None:
+        Xt = X
+    
+    # Normalize inputs to unit vectors
+    X_norm = X / (torch.norm(X, dim=1, keepdim=True) + 1e-8)
+    Xt_norm = Xt / (torch.norm(Xt, dim=1, keepdim=True) + 1e-8)
 
-def rbf_kernel(X,Xt, sigma=1.0):
+    # Compute cosine similarity
+    cosine_sim = torch.matmul(X_norm, Xt_norm.T)
+
+    # Convert to angular similarity
+    angular_sim = 1 - torch.acos(torch.clamp(cosine_sim, -1 + 1e-6, 1 - 1e-6)) / torch.pi
+
+    return angular_sim
+
+def polynomial_kernel(X, Xt=None, degree=2, c=1):
+    """Computes the polynomial kernel."""
+    if Xt is None:
+        Xt = X
+    return (torch.matmul(X, Xt.T) + c) ** degree
+
+
+def rbf_kernel(X,Xt, sigma=None):
     """Computes the RBF (Gaussian) kernel matrix."""
-   # if Xt.shape[0] > X.shape[0]:
-   #     pairwise_sq_dists = torch.cdist(Xt, Xt, p=2) ** 2  # Squared Euclidean distance
-   # else:
     pairwise_sq_dists = torch.cdist(X, Xt, p=2) ** 2  # Squared Euclidean distance
+    if sigma is None:
+        sigma = torch.median(pairwise_sq_dists).sqrt()
     return torch.exp(-pairwise_sq_dists / (2 * sigma ** 2))
 
 def polynomial_kernel(X, Y, degree=2, c=1):
@@ -246,7 +263,7 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
                 if batch_file_idx2 > math.ceil(total_nr_batches):
                     break
                 batch_activations_transpose = torch.load(
-                    f"{load_dir}/{layer}_batch_{batch_file_idx2}.pt"
+                    f"{load_dir}/{layer}_batch_{batch_file_idx2}.pt", weights_only= False
                 ).to(device)
                 batch_activations_transpose_list.append(batch_activations_transpose.reshape(batch_activations_transpose.shape[0], -1))
 
@@ -254,11 +271,14 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
                 continue
 
             batch_activations_transpose = torch.cat(batch_activations_transpose_list, dim=0)
-
-            kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=1.0)[:abs(start_idx_col-end_idx_col),:abs(start_idx_row-end_idx_row)]
+            #kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
+            kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=1.0)
+           # kernel_block = angular_kernel(batch_activations,batch_activations_transpose)
+            #kernel_block = polynomial_kernel(batch_activations,batch_activations_transpose)
+            print("am_about_to_laplace")
             #print("kernel shape:",kernel_block.shape)
             #print("block shape:",abs(start_idx_col-end_idx_col),abs(start_idx_row-end_idx_row))
-
+            #TODO
             full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block
             full_kernel[start_idx_row:end_idx_row, start_idx_col:end_idx_col] = kernel_block.T  # Use symmetry
     return full_kernel.cpu()
