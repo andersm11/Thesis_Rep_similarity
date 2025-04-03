@@ -90,13 +90,13 @@ class SpatialAttention(nn.Module):
         return x  # Weighted Feature Maps
 
 class ShallowAttentionNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.7, num_kernels=40, kernel_size=25, pool_size=50):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=50):
         super(ShallowAttentionNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))  # Reduce num_kernels to 5
-        self.spatial_att = SpatialAttention(num_kernels,pool_size//8)
+        self.spatial_att = SpatialAttention(num_kernels,pool_size//10)
 
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
