@@ -49,7 +49,7 @@ def angular_kernel(X, Xt=None):
 
     return angular_sim
 
-def polynomial_kernel(X, Xt=None, degree=2, c=1):
+def polynomial_kernel(X, Xt=None, degree=2, c=0.01):
     """Computes the polynomial kernel."""
     if Xt is None:
         Xt = X
@@ -93,9 +93,7 @@ def compute_hsic(K_x, K_y):
     """
     K_x_centered = centering_matrix(K_x)
     K_y_centered = centering_matrix(K_y)
-    K_x_centered_normalized = normalize_kernel(K_x_centered)
-    K_y_centered_normalized = normalize_kernel(K_y_centered)
-    hsic_value = torch.trace(K_x_centered_normalized @ K_y_centered_normalized) / ((K_x.shape[0] - 1) ** 2)
+    hsic_value = torch.trace(K_x_centered @ K_y_centered) / ((K_x.shape[0] - 1) ** 2)
     return hsic_value
   
 def CKA(K_x,K_y):
