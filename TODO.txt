@@ -1,5 +1,2 @@
-check shallow training
-train SGConv
-Compute CKA temp
-Compute CKA spat
-Go over parameters for spat
+redo graph model with actauly input format. wth
+redo attention with spatial attention over time

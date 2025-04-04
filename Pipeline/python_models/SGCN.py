@@ -28,12 +28,14 @@ class SimpleGCNNet(torch.nn.Module):
         self.epsilon = 1e-6
             
     def forward(self, x, edge_index, alpha=0):
-        self.edge_weights.data[F.elu(self.edge_weights.data)  <=  0] = 1e-7  
+        self.edge_weights.data[F.elu(self.edge_weights.data)  <=  0] = self.epsilon 
+        B,K,C,T= x.shape
+        x = x.view(B, C, K * T) 
         x = self.sgconv(x, edge_index, self.edge_weights)
         return x
 
 class ShallowSGCNNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=20, kernel_size=25, pool_size=20,num_hidden=2,K=1):
+    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=20,num_hidden=2,K=1):
         super().__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
