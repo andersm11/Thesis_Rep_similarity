@@ -29,8 +29,8 @@ class SimpleGCNNet(torch.nn.Module):
             
     def forward(self, x, edge_index, alpha=0):
         self.edge_weights.data[F.elu(self.edge_weights.data)  <=  0] = self.epsilon 
-        B,K,C,T= x.shape
-        x = x.view(B, C, K * T) 
+       # B,K,C,T= x.shape
+       # x = x.view(B, C, K * T) 
         x = self.sgconv(x, edge_index, self.edge_weights)
         return x
 
@@ -46,7 +46,7 @@ class ShallowSGCNNet(nn.Module):
         self.pool = nn.AvgPool2d((1, pool_size))
         #self.pool2 = nn.AvgPool2d((1,2))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(880 , n_outputs)
+        self.fc = nn.Linear(1760  , n_outputs)
 
 
     def forward(self, input,edge_index):
