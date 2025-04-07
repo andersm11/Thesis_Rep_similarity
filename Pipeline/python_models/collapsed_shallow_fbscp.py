@@ -52,7 +52,7 @@ class ShallowFBCSPNet(nn.Module):
         pool_size (int, optional): Size of the pooling window. Default is 100.
     """
 
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=100):
+    def __init__(self, n_chans, n_outputs, n_times, n_subjs, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=100):
         super(ShallowFBCSPNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
@@ -63,25 +63,31 @@ class ShallowFBCSPNet(nn.Module):
         #     f'subj-{i}': nn.Conv2d(1, num_kernels, (1, kernel_size))
         #     for i in range(n_subjs)
         # })
-        self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.spatial = nn.Conv2d(num_kernels, num_kernels, (n_chans, 1))
         self.pool = nn.AvgPool2d((1, pool_size))
-        
+        self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.dropout = nn.Dropout(dropout)
         self.fc = nn.LazyLinear(n_outputs)
 
-    def forward(self, input, apply_pooling = False):
+    def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         #subj_id = subject[0].item()
         x = self.temporal(x)
+        #print("Temporal Shape: ", x.shape)
         # x = self.temporal_layers[f'subj-{subj_id}'](x)
         x = self.spatial(x)
+        #print("Spatial :", x.shape)
         x = F.elu(x)
+        #print("elu :", x.shape)
         x = self.batch_norm(x)
+        #print("Batch_norm :", x.shape)
         x = self.pool(x)
+        #print("Pool :", x.shape)
         x = x.view(x.size(0), -1)
         x = self.dropout(x)
+        #print("Dropout :", x.shape )
         x = self.fc(x)
+        #print("fc: ", x.shape)
         return x
     
 
@@ -166,8 +172,8 @@ class Conformer(nn.Module):
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
         self.spatial = nn.Conv2d(num_kernels, num_kernels, (n_chans, 1))
         self.pool = nn.AvgPool2d((1, pool_size))
-        self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.dropout = nn.Dropout(dropout)
+        self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.projection = nn.Conv2d(num_kernels, num_kernels, (1, 1))
         self.encoder_layers = nn.TransformerEncoderLayer(
             d_model=num_kernels, nhead=nhead, dim_feedforward=4*num_kernels, activation='gelu', batch_first=True, dropout=dropout)

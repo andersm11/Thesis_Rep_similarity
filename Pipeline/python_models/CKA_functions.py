@@ -31,23 +31,12 @@ def linear_kernel(X,Xt):
     """Computes the linear kernel matrix for X."""
     return X @ Xt  # Dot product
 
-def angular_kernel(X, Xt=None):
-    """Computes the Angular Kernel matrix based on cosine similarity."""
-    # If Xt is None, compute self-kernel
+def cosine_kernel(X, Xt=None):
     if Xt is None:
         Xt = X
-    
-    # Normalize inputs to unit vectors
-    X_norm = X / (torch.norm(X, dim=1, keepdim=True) + 1e-8)
-    Xt_norm = Xt / (torch.norm(Xt, dim=1, keepdim=True) + 1e-8)
-
-    # Compute cosine similarity
-    cosine_sim = torch.matmul(X_norm, Xt_norm.T)
-
-    # Convert to angular similarity
-    angular_sim = 1 - torch.acos(torch.clamp(cosine_sim, -1 + 1e-6, 1 - 1e-6)) / torch.pi
-
-    return angular_sim
+    X_norm = X / (X.norm(dim=1, keepdim=True) + 1e-8)
+    Xt_norm = Xt / (Xt.norm(dim=1, keepdim=True) + 1e-8)
+    return torch.matmul(X_norm, Xt_norm.T) 
 
 def polynomial_kernel(X, Xt=None, degree=2, c=0.01):
     """Computes the polynomial kernel."""
@@ -58,9 +47,10 @@ def polynomial_kernel(X, Xt=None, degree=2, c=0.01):
 
 def rbf_kernel(X,Xt, sigma=None):
     """Computes the RBF (Gaussian) kernel matrix."""
-    pairwise_sq_dists = torch.cdist(X, Xt, p=2) ** 2  # Squared Euclidean distance
+    pairwise_sq_dists = torch.cdist(X, Xt, p=2) ** 2 
     if sigma is None:
         sigma = torch.median(pairwise_sq_dists).sqrt()
+        print("SIGMA:",sigma)
     return torch.exp(-pairwise_sq_dists / (2 * sigma ** 2))
 
 def polynomial_kernel(X, Y, degree=2, c=1):
@@ -184,14 +174,14 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
     model.eval()
     try:
-        from SGCN_FACED import ShallowSGCNNet
+        from SGCN import ShallowSGCNNet
     except ImportError as e:
         try:
             from SGCN import ShallowSGCNNet
         except ImportError as e:
             print(e)
-        print(e)
-    if isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN':
+        print(e)   
+    if isinstance(model, ShallowSGCNNet) and (ShallowSGCNNet.__module__ == 'SGCN' or ShallowSGCNNet.__module__ == 'RGNN'):
         adj_m,pos = adjacency_matrix_motion()
         #print(adj_m)
         adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=5)
@@ -223,6 +213,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
         for i in range(0, input_tensor.shape[0], batch_size):
             batch = input_tensor[i:i + batch_size]  # Select current batch
             if isinstance(model,ShallowSGCNNet):
+                
                 _ = model(batch,edge_index.to(device))
             else:
                 _ = model(batch)  # Forward pass through the model
@@ -286,9 +277,9 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
             batch_activations.to(device)
             batch_activations_transpose.to(device)
             batch_activations_transpose = torch.cat(batch_activations_transpose_list, dim=0)
-            kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
-            #kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=1.0)
-           # kernel_block = angular_kernel(batch_activations,batch_activations_transpose)
+            #kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
+            kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=None)
+           # kernel_block = cosine_kernel(batch_activations,batch_activations_transpose)
             #kernel_block = polynomial_kernel(batch_activations,batch_activations_transpose)
             #print("am_about_to_laplace")
             #print("kernel shape:",kernel_block.shape)
