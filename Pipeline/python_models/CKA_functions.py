@@ -157,7 +157,7 @@ def fix_dataset_shape(data):
     return x
 
 
-def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor, output_dir: str, layer_names: list[str], batch_size: int = 128):
+def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor, output_dir: str, layer_names: list[str], batch_size: int = 128,device='cpu'):
     found_layer_names = []
     if os.path.exists(output_dir) and os.listdir(output_dir):
         print(f"Output directory {output_dir} is not empty, assuming kernel already computed. Returning found layer names.")
@@ -184,10 +184,14 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
     model.eval()
     try:
-        from SGCN import ShallowSGCNNet
+        from SGCN_FACED import ShallowSGCNNet
     except ImportError as e:
+        try:
+            from SGCN import ShallowSGCNNet
+        except ImportError as e:
+            print(e)
         print(e)
-    if isinstance(model, ShallowSGCNNet):
+    if isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN':
         adj_m,pos = adjacency_matrix_motion()
         #print(adj_m)
         adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=5)
@@ -202,12 +206,24 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+    elif isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN_FACED':
+        adj_m,pos = adjacency_matrix_FACED()
+        adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=5)
+        threshold = 0  # Adjust as needed
+        source_nodes = []
+        target_nodes = []
+        for i in range(dm.shape[0]):
+            for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
+                if dm[i, j] >= threshold:  # If the distance meets the condition
+                    source_nodes.append(i)  # Source node
+                    target_nodes.append(j)  # Target node
+        edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
     
     with torch.no_grad():
         for i in range(0, input_tensor.shape[0], batch_size):
             batch = input_tensor[i:i + batch_size]  # Select current batch
             if isinstance(model,ShallowSGCNNet):
-                _ = model(batch,edge_index)
+                _ = model(batch,edge_index.to(device))
             else:
                 _ = model(batch)  # Forward pass through the model
             # Save activations after each batch
@@ -221,10 +237,10 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
     return found_layer_names
 
 # compute kernel single model
-def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, total_samples: int, load_dir:str, n_batches: int =1, use_cuda=False):
+def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, total_samples: int, load_dir:str, n_batches: int =1, device='cpu'):
     """Computes the full kernel matrix in batches efficiently using matrix multiplication."""
     
-    device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
 
     full_kernel = torch.zeros((total_samples, total_samples), dtype=torch.float32, device=device)
     
@@ -267,17 +283,18 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
 
             if not batch_activations_transpose_list:
                 continue
-
+            batch_activations.to(device)
+            batch_activations_transpose.to(device)
             batch_activations_transpose = torch.cat(batch_activations_transpose_list, dim=0)
-            #kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
-            kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=1.0)
+            kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
+            #kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=1.0)
            # kernel_block = angular_kernel(batch_activations,batch_activations_transpose)
             #kernel_block = polynomial_kernel(batch_activations,batch_activations_transpose)
-            print("am_about_to_laplace")
+            #print("am_about_to_laplace")
             #print("kernel shape:",kernel_block.shape)
             #print("block shape:",abs(start_idx_col-end_idx_col),abs(start_idx_row-end_idx_row))
             #TODO
-            full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block
+            full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block.to('cpu')
             full_kernel[start_idx_row:end_idx_row, start_idx_col:end_idx_col] = kernel_block.T  # Use symmetry
     return full_kernel.cpu()
 
@@ -285,7 +302,7 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
 import os
 import torch
 
-def compute_full_kernels(layer_names: list[str], total_nr_batches: int, batch_size: int, total_samples: int, load_dir: str, id:str,save_dir: str, n_batches: int = 1, use_cuda: bool = False):
+def compute_full_kernels(layer_names: list[str], total_nr_batches: int, batch_size: int, total_samples: int, load_dir: str, id:str,save_dir: str, n_batches: int = 1, device = 'cpu'):
     """Computes the kernels for model and saves them to the given directory if not already saved.
     Deletes all elements in load_dir after computation and adds an empty 'done' file."""
     
@@ -298,7 +315,7 @@ def compute_full_kernels(layer_names: list[str], total_nr_batches: int, batch_si
     
     for layer in layer_names:
         print("Got layer:", layer)
-        kernel = compute_kernel_full_lowmem(layer, total_nr_batches, batch_size, total_samples, load_dir, n_batches, use_cuda)
+        kernel = compute_kernel_full_lowmem(layer, total_nr_batches, batch_size, total_samples, load_dir, n_batches, device)
         
         model_kernels[layer] = kernel
     
@@ -331,7 +348,7 @@ def compute_multi_model_kernels(
     use_state: bool = False,
     batch_size: int = 128,
     n_batches: int = 1,
-    use_cuda: bool = False
+    device: Optional[torch.device] = 'cpu',
 ):
     """Computes kernels for multiple models and saves them in the given directory."""
     model_files = os.listdir(models_directory)
@@ -339,8 +356,8 @@ def compute_multi_model_kernels(
     total_nr_batches = math.ceil(total_samples / batch_size)
     final_layer_names=[]
     final_model_names=[]
-    use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
+    #use_cuda = torch.cuda.is_available()
+    #device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
     for model_file in model_files:
         if not model_file.endswith('state.pth'):
             model_name, loss, seed = model_file.rsplit('_', 2)
@@ -351,11 +368,11 @@ def compute_multi_model_kernels(
             
             activation_dir = os.path.join(activations_root_directory, model_name, f"{loss}_{seed}")
             try:
-                found_names = extract_model_activations(model, input_data, activation_dir, layer_names, batch_size=batch_size)
+                found_names = extract_model_activations(model, input_data, activation_dir, layer_names, batch_size=batch_size,device=device)
             except Exception as e:
                 print(f"Error extracting activations: {e}. Resampling input data to 1000 samples and retrying.")
                 downsampled_data = F.interpolate(input_data, size=(1000,), mode='linear', align_corners=False)
-                found_names = extract_model_activations(model, downsampled_data, activation_dir, layer_names, batch_size=batch_size)
+                found_names = extract_model_activations(model, downsampled_data, activation_dir, layer_names, batch_size=batch_size,device=device)
             if not (model_name in final_model_names):
                 final_model_names.append(model_name)
                 final_layer_names.append(found_names)
@@ -370,7 +387,7 @@ def compute_multi_model_kernels(
                 f"{loss}_{seed}",
                 kernel_dir,
                 n_batches,
-                use_cuda
+                device
             )
     return final_layer_names, final_model_names
             
@@ -384,7 +401,7 @@ def compute_all_model_kernels(
     use_state: bool = False,
     batch_size: int = 128,
     n_batches: int = 1,
-    use_cuda: bool = False
+    device: Optional[torch.device] = 'cpu',
 ):
     model_directories = os.listdir(target_directory)
     kwargs = {
@@ -395,7 +412,7 @@ def compute_all_model_kernels(
         "use_state": use_state,
         "batch_size": batch_size,
         "n_batches": n_batches,
-        "use_cuda": use_cuda
+        "device": device,
     }
     for direc in model_directories:
         model_path = os.path.join(target_directory,direc)
