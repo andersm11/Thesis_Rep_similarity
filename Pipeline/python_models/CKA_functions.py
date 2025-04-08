@@ -174,7 +174,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
     model.eval()
     try:
-        from SGCN import ShallowSGCNNet
+        from SGCN_FACED import ShallowSGCNNet
     except ImportError as e:
         try:
             from SGCN import ShallowSGCNNet
@@ -212,6 +212,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
     with torch.no_grad():
         for i in range(0, input_tensor.shape[0], batch_size):
             batch = input_tensor[i:i + batch_size]  # Select current batch
+            #print(ShallowSGCNNet.__module__)
             if isinstance(model,ShallowSGCNNet):
                 
                 _ = model(batch,edge_index.to(device))
@@ -277,8 +278,8 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
             batch_activations.to(device)
             batch_activations_transpose.to(device)
             batch_activations_transpose = torch.cat(batch_activations_transpose_list, dim=0)
-            #kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
-            kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=None)
+            kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
+            #kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=None)
            # kernel_block = cosine_kernel(batch_activations,batch_activations_transpose)
             #kernel_block = polynomial_kernel(batch_activations,batch_activations_transpose)
             #print("am_about_to_laplace")
@@ -498,12 +499,12 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
     os.makedirs(output_dir, exist_ok=True)
     
     # Configure logging
-    log_file = os.path.join(output_dir, 'cka_computation.log')
-    logging.basicConfig(filename=log_file, 
-                        level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+    # log_file = os.path.join(output_dir, 'cka_computation.log')
+    # logging.basicConfig(filename=log_file, 
+    #                     level=logging.INFO,
+    #                     format='%(asctime)s - %(levelname)s - %(message)s')
     
-    logging.info("Starting CKA computation for models in %s", root_dir)
+    # logging.info("Starting CKA computation for models in %s", root_dir)
     
     # Get all folders in the root directory
     model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
@@ -513,7 +514,7 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
         model1 = os.path.basename(model_dir1)
         model2 = os.path.basename(model_dir2)
         
-        logging.info("Computing CKA between %s and %s", model1, model2)
+        #logging.info("Computing CKA between %s and %s", model1, model2)
         
         print(f"Computing CKA between {model1} and {model2}...")
         
@@ -542,8 +543,8 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
     model_type2_kernels = []  # For the second model type
     model_name1 = ""
     model_name2 = ""
-    print(model_dir1)
-    print(model_dir2)
+    print("model1:",model_dir1)
+    print("model2:",model_dir2)
 
     for filename in os.listdir(model_dir1):
         if not filename.endswith('.pth'):
@@ -572,8 +573,10 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
             print("trying different slash")
             _, model_name2 = model_dir2.rsplit('\\',1)
         model_type2_kernels.append(kernel)  # For the second model type
-
+    print(model_type1_kernels)
+    print(model_type2_kernels)
     cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
+    print(cka_results.shape)
 
     layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type1_kernels[0].keys())}
     layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type2_kernels[0].keys())}
