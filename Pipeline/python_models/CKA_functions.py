@@ -6,25 +6,17 @@ import logging
 import math
 import numpy as np
 import torch
-import torch.nn as nn
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
-from braindecode.models import EEGConformer
-
-#import python_models.Attention_FIRST_model
-import importlib
 import pandas as pd
 from collections import OrderedDict
 import math
 import pickle
 import os
 from typing import Type,Optional
-from itertools import product
 import torch.nn.functional as F
-import sys
 import os
-from concurrent.futures import ThreadPoolExecutor
 # CKA math
 
 def linear_kernel(X,Xt):
@@ -532,6 +524,53 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
 
     
     logging.info("CKA computation completed.")
+
+def compute_all_model_CKA_lowmem(root_dir: str, output_dir: str):
+    """
+    Computes CKA between models in different folders under the root directory.
+    Each folder represents a model architecture and contains .pth files (kernels).
+    
+    The function iterates through each pair of folders, computes CKA, and saves the results in the output directory.
+    If the output directory does not exist, it is created.
+    """
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Configure logging
+    # log_file = os.path.join(output_dir, 'cka_computation.log')
+    # logging.basicConfig(filename=log_file, 
+    #                     level=logging.INFO,
+    #                     format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    # logging.info("Starting CKA computation for models in %s", root_dir)
+    
+    # Get all folders in the root directory
+    model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
+
+    # Iterate over all unique pairs of model directories
+    for model_dir1, model_dir2 in itertools.product(model_dirs, repeat=2):
+        model1 = os.path.basename(model_dir1)
+        model2 = os.path.basename(model_dir2)
+        
+        #logging.info("Computing CKA between %s and %s", model1, model2)
+        
+        print(f"Computing CKA between {model1} and {model2}...")
+        
+        # Compute cross-model CKA
+        cka_results = compute_cross_model_CKA_lowmem(model_dir1, model_dir2)  # Assumed function
+        
+        # Save results to a file in the output directory
+        result_filename = f"{model1}_vs_{model2}.npy"
+        result_path = os.path.join(output_dir, result_filename)
+        np.save(result_path, cka_results)
+        
+        logging.info("Saved CKA results to %s", result_path)
+        print(f"Saved results to {result_path}")
+        #results = [future.result() for future in futures]
+
+    
+    logging.info("CKA computation completed.")
  
 
 
@@ -617,7 +656,99 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
     print(len(model_type1_kernels))
     return cka_results  # Return the CKA similarity matrix
     
+def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
+    # Set device to GPU if available, otherwise fallback to CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    #model_type1_kernels = []  # For the first model type
+    og_kernels_count = 0
+    comp_kernels_count = 0
+    found_kernels = 0
+    #model_type2_kernels = []  # For the second model type
+    model_name1 = ""
+    model_name2 = ""
+    print("model1:",model_dir1)
+    print("model2:",model_dir2)
+
+    for filename in os.listdir(model_dir1):
+        if not filename.endswith('.pth'):
+            continue
+        model_path = os.path.join(model_dir1, filename)
+        og_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        #model_type1_kernels.append(kernel)  # For the first model type
+        try:
+            _, model_name1 = model_dir1.rsplit('/', 1)
+        except Exception as e:
+            print(e)
+            print("trying different slash")
+            _, model_name1 = model_dir1.rsplit('\\',1)
+            
+    for filename in os.listdir(model_dir2):
+        if not filename.endswith('.pth'):
+            continue
+        model_path = os.path.join(model_dir2, filename)
+        #print("compare to:",model_path)
+        comp_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        found_kernels +=1
+        try:
+            _, model_name2 = model_dir2.rsplit('/', 1)
+        except Exception as e:
+            print(e)
+            print("trying different slash")
+            _, model_name2 = model_dir2.rsplit('\\',1)
+        #model_type2_kernels.append(kernel)  # For the second model type
+    #print(model_type1_kernels)
+    #print(model_type2_kernels)
+    cka_results = np.zeros((len(og_kernel), len(comp_kernel)))
+    print(cka_results.shape)
+
+    layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(og_kernel.keys())}
+    layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(comp_kernel.keys())}
+    if not os.path.exists("cka_csv"):
+        os.makedirs("cka_csv", exist_ok=True)
+    panda_data = []
+
+    for filename in os.listdir(model_dir1):
+        if not filename.endswith('.pth'):
+            continue
+        model_path = os.path.join(model_dir1, filename)
+        print("og kernel:",model_path)
+        og_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        og_kernels_count +=1
+        cka_inner = np.zeros((len(og_kernel), len(comp_kernel)))  # Initialize inner CKA matrix for each kernel_A
+        for filename in os.listdir(model_dir2):
+            if not filename.endswith('.pth'):
+                continue
+            model_path = os.path.join(model_dir1, filename)
+            print("compare kernel:",model_path)
+            comp_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+            comp_kernels_count +=1
+            for layer1, K_x in og_kernel.items():
+                for layer2, K_y in comp_kernel.items():
+                    # Move kernels to GPU if available
+                    K_x, K_y = K_x.to(device), K_y.to(device)
+                    
+                    cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
+                    idx1 = layer1_to_idx[layer1]
+                    idx2 = layer2_to_idx[layer2]
+                    panda_data.append((layer1,layer2,cka_value))
+                    
+                    cka_inner[idx1, idx2] += cka_value
+                    print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
+            
+        cka_inner /=found_kernels
+        print(found_kernels)
+        cka_results += cka_inner
+        print(f"Avg CKA result for kernel {og_kernels_count}: {cka_inner}")
+
+    df = pd.DataFrame([(cka_value[0],cka_value[1],cka_value[2]) for cka_value in panda_data],
+                            columns=['Layer1', 'Layer2', 'CKA_Value'])
+
+    df.to_csv(f"cka_csv/CKA_{model_name1}_vs_{model_name2}.csv", sep ="\t", index = False, header = True)
+
+    cka_results /= og_kernels_count
+    print(og_kernels_count)
+    return cka_results  # Return the CKA similarity matrix
 
 def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
     n_layers1 = len(layer_names_model1)
