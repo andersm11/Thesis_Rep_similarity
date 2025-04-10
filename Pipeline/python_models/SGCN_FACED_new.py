@@ -30,14 +30,15 @@ class SimpleGCNNet(torch.nn.Module):
         #self.dropout = nn.Dropout(dropout)
             
     def forward(self, x, edge_index, alpha=0):
-        self.edge_weights.data[self.edge_weights.data <= 0] = self.epsilon  
+        self.edge_weights.data[self.edge_weights.data <= -2.0] = -2.0 
+        self.edge_weights.data[self.edge_weights.data > 5.0] = 5.0
         #edge_weights = F.softplus(self.edge_weights)
         x = self.sgconv(x, edge_index, self.edge_weights)
         return x
 
 
 class ShallowSGCNNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.5, num_kernels=10, kernel_size=25, pool_size=10,num_hidden=10,K=1):
+    def __init__(self, n_chans, n_outputs, n_times, edge_weights, dropout=0.6, num_kernels=20, kernel_size=25, pool_size=10,num_hidden=20,K=1):
         super().__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
@@ -47,9 +48,9 @@ class ShallowSGCNNet(nn.Module):
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.batch_norm2 = nn.BatchNorm2d(num_hidden)
-        self.pool2 = nn.AvgPool2d((1,pool_size//8))
+        self.pool2 = nn.AvgPool2d((1,pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(1600, n_outputs)
+        self.fc = nn.Linear(1280, n_outputs)
 
 
     def forward(self, input,edge_index):
@@ -63,8 +64,8 @@ class ShallowSGCNNet(nn.Module):
         #print(x.shape)
         x = self.sgconv(x,edge_index)
         x = F.elu(x)
-        # x = self.batch_norm2(x)
-        # x = self.pool2(x)
+        #x = self.batch_norm2(x)
+        x = self.pool2(x)
         x = x.view(x.size(0), -1)
 
         x = self.dropout(x)

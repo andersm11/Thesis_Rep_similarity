@@ -711,17 +711,17 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
     for filename in os.listdir(model_dir1):
         if not filename.endswith('.pth'):
             continue
-        model_path = os.path.join(model_dir1, filename)
-        print("og kernel:",model_path)
-        og_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        model_path1 = os.path.join(model_dir1, filename)
+        print("og kernel:",model_path1)
+        og_kernel = torch.load(model_path1, map_location=device)  # Load kernel dictionary onto the device
         og_kernels_count +=1
         cka_inner = np.zeros((len(og_kernel), len(comp_kernel)))  # Initialize inner CKA matrix for each kernel_A
         for filename in os.listdir(model_dir2):
             if not filename.endswith('.pth'):
                 continue
-            model_path = os.path.join(model_dir1, filename)
-            print("compare kernel:",model_path)
-            comp_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+            model_path2 = os.path.join(model_dir2, filename)
+            print("compare kernel:",model_path2)
+            comp_kernel = torch.load(model_path2, map_location=device)  # Load kernel dictionary onto the device
             comp_kernels_count +=1
             for layer1, K_x in og_kernel.items():
                 for layer2, K_y in comp_kernel.items():

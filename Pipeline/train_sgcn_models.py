@@ -1,14 +1,9 @@
-import sys
 import importlib
-import subprocess
-import torch
-import torch
 from braindecode.util import set_random_seeds
 import torch.nn.functional as F
 import wandb
 import importlib
 import SGCN_FACED
-importlib.reload(SGCN_FACED)
 from SGCN_FACED import ShallowSGCNNet
 from weight_init import init_weights
 from CKA_functions import adjacency_matrix_motion,adjacency_matrix_distance_motion
@@ -22,8 +17,6 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix
 import numpy as np
-from tqdm import tqdm
-import torch
 import wandb
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
@@ -37,10 +30,10 @@ import io
 
 
 wandb.login()
-
+# train_set = torch.load('Datasets/emotion_train_set.pt')
+# test_set = torch.load('Datasets/emotion_test_set.pt')
 train_set = torch.load('FACED_dataset/emotion_train_set.pt')
 test_set = torch.load('FACED_dataset/emotion_test_set.pt')
-
 
 
 cuda = torch.cuda.is_available()  # check if GPU is available, if True chooses to use it
@@ -166,12 +159,12 @@ def test_model(dataloader: DataLoader, model: torch.nn.Module,edge_index, loss_f
     test_loss /= n_batches
     overall_accuracy = (correct / size) * 100
 
-    # Print per-class accuracy
-    print("\nClass-wise Accuracy:")
-    for cls, acc in class_accuracies.items():
-        print(f"  Class {cls}: {acc:.2f}%")
+    # # Print per-class accuracy
+    # print("\nClass-wise Accuracy:")
+    # for cls, acc in class_accuracies.items():
+    #     print(f"  Class {cls}: {acc:.2f}%")
 
-    print(f"Test Accuracy: {overall_accuracy:.1f}%, Test Loss: {test_loss:.6f}\n")
+    # print(f"Test Accuracy: {overall_accuracy:.1f}%, Test Loss: {test_loss:.6f}\n")
 
 
 
@@ -199,18 +192,10 @@ def get_e_index(dm):
 
 
 
-import torch
-import wandb
-from torch.utils.data import DataLoader
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from torch.nn import CrossEntropyLoss
-import numpy as np
-import matplotlib.pyplot as plt
-import math
+
 save_path ="models/"
 
-seeds = [99999]#],182726,91111222,44552222,12223111,100300,47456655,4788347,77766666,809890]
+seeds = [99999]#,182726,91111222,44552222,12223111,100300,47456655,4788347,77766666,809890]
 for _seed in seeds:
     seed = _seed
     set_random_seeds(seed=seed, cuda=cuda)
@@ -220,7 +205,7 @@ for _seed in seeds:
     dm
     torch_tensor = torch.from_numpy(dm)
     edge_weight = torch_tensor.reshape(-1)
-    print(edge_weight.shape)
+    #print(edge_weight.shape)
     model = ShallowSGCNNet(
         n_chans=n_channels,
         n_outputs=n_classes,
@@ -236,10 +221,10 @@ for _seed in seeds:
     wandb.init(project="Master Thesis", name=f"{model.__class__.__name__} {seed}")
     model.apply(init_weights)
     # Define hyperparameters
-    lr = 1e-4
+    lr = 1e-5
     weight_decay = 1e-4
     batch_size = 64  # Start with 124
-    n_epochs = 1000
+    n_epochs = 10000
 
     final_acc = 0.0
 
@@ -263,33 +248,28 @@ for _seed in seeds:
     test_loader = DataLoader(test_set, batch_size=batch_size)
 
     # Initialize lists to store all predictions & targets
-    all_preds, all_targets = [], []
+    # all_preds, all_targets = [], []
 
     # Training loop
     for epoch in range(1, n_epochs + 1):
-        print(f"Epoch {epoch}/{n_epochs}: ", end="")
+        #print(f"Epoch {epoch}/{n_epochs}: ", end="")
 
         train_loss, train_accuracy = train_one_epoch(
             train_loader, model,edge_index, loss_fn, optimizer, scheduler, epoch, device
         )
 
-        test_loss, test_accuracy, class_accuracies, batch_preds, batch_targets = test_model(test_loader, model,edge_index, loss_fn)
+        test_loss, test_accuracy, class_accuracies, batch_preds, batch_targets = test_model(test_loader, model,edge_index, loss_fn,print_batch_stats=False)
         final_acc = test_accuracy
 
-        # Store predictions & labels for confusion matrix
-        all_preds.extend(batch_preds)
-        all_targets.extend(batch_targets)
+        # # Store predictions & labels for confusion matrix
+        # all_preds.extend(batch_preds)
+        # all_targets.extend(batch_targets)
 
-        # Print class-wise accuracy
-        print("\nClass-wise Accuracy:")
-        for class_idx, acc in class_accuracies.items():
-            print(f"  Class {class_idx}: {acc:.2f}%")
-
-        adj_matrix = model.sgconv.edge_weights.detach().cpu().numpy().reshape(22,22)
+        adj_matrix = model.sgconv.edge_weights.detach().cpu().numpy().reshape(32,32)
 
         # Create a plot
         fig, ax = plt.subplots(figsize=(8, 8))
-        cax = ax.matshow(adj_matrix, cmap='viridis', interpolation='nearest',vmin=0, vmax=1)  # Adjust color map
+        cax = ax.matshow(adj_matrix, cmap='viridis', interpolation='nearest',vmin=0, vmax=5)  # Adjust color map
         fig.colorbar(cax)
 
             # Convert the figure to a NumPy array
@@ -313,23 +293,14 @@ for _seed in seeds:
             "adj_matrix": wandb.Image(pil_img),  # Log the PIL image directly
         })
 
-        print(
-            f"Train Accuracy: {100 * train_accuracy:.2f}%, "
-            f"Average Train Loss: {train_loss:.6f}, "
-            f"Test Accuracy: {test_accuracy:.2f}%, "
-            f"Average Test Loss: {test_loss:.6f}\n"
-        )
 
-    # Convert lists to NumPy arrays
-    all_preds = np.array(all_preds)
-    all_targets = np.array(all_targets)
+    # all_preds = np.array(all_preds)
+    # all_targets = np.array(all_targets)
 
-    # Save predictions & true labels for later use (confusion matrix)
-    wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
+    # # Save predictions & true labels for later use (confusion matrix)
+    # wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
     wandb.finish()
 
-    # Assuming 'model' is your trained Braindecode model
-    print(seed)
     torch.save(model, save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}.pth")
     torch.save(model.state_dict(), save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}_state.pth")
 

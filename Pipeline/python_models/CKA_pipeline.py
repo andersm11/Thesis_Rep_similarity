@@ -10,11 +10,11 @@ kernel_direc = "../kernels"
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
 #X = fix_dataset_shape(load_dataset("test_set.pkl","../Datasets/"))
-X = torch.load("../Datasets/emotion_test_set.pt",map_location=device)
-X = [sublist[0] for sublist in X]  # Extract the first tensor in each tuple
-X = torch.stack(X)  # Stack the tensors into a single tensor
+# X = torch.load("../Datasets/emotion_test_set.pt",map_location=device)
+# X = [sublist[0] for sublist in X]  # Extract the first tensor in each tuple
+# X = torch.stack(X)  # Stack the tensors into a single tensor
 
-print("data shape:", X.shape)
+# print("data shape:", X.shape)
 
 layer_names=["sgconv","spatial","spatial_att"]
 batch_size = 288
@@ -25,7 +25,8 @@ n_batches = 8
 #                             layer_names=layer_names,
 #                             batch_size=batch_size,
 #                             n_batches=n_batches)
-compute_all_model_CKA(kernel_direc,"../cka_results")
-plot_cka_heatmaps("../cka_results","../kernels")
+# compute_all_model_CKA(kernel_direc,"../cka_results")
+# plot_cka_heatmaps("../cka_results","../kernels")
+compose_heat_matrix("../cka_results","cka_heatmaps","cka heatmap")
 
 

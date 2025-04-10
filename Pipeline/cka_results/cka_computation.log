@@ -1,8 +1,0 @@
-2025-04-08 22:09:13,330 - INFO - Starting CKA computation for models in ../kernels
-2025-04-08 22:09:13,331 - INFO - Computing CKA between ShallowAttentionNet and ShallowAttentionNet
-2025-04-08 22:14:17,141 - INFO - Starting CKA computation for models in ../kernels
-2025-04-08 22:14:17,142 - INFO - Computing CKA between ShallowAttentionNet and ShallowAttentionNet
-2025-04-08 22:16:46,922 - INFO - Starting CKA computation for models in ../kernels
-2025-04-08 22:16:46,933 - INFO - Computing CKA between ShallowAttentionNet and ShallowAttentionNet
-2025-04-08 22:21:11,912 - INFO - Starting CKA computation for models in ../kernels
-2025-04-08 22:21:11,914 - INFO - Computing CKA between ShallowAttentionNet and ShallowAttentionNet
