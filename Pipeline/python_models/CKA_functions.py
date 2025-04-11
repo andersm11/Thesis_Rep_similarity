@@ -42,7 +42,6 @@ def rbf_kernel(X,Xt, sigma=None):
     pairwise_sq_dists = torch.cdist(X, Xt, p=2) ** 2 
     if sigma is None:
         sigma = torch.median(pairwise_sq_dists).sqrt()
-        print("SIGMA:",sigma)
     return torch.exp(-pairwise_sq_dists / (2 * sigma ** 2))
 
 def polynomial_kernel(X, Y, degree=2, c=1):
@@ -175,8 +174,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
         print(e)   
     if isinstance(model, ShallowSGCNNet) and (ShallowSGCNNet.__module__ == 'SGCN' or ShallowSGCNNet.__module__ == 'RGNN'):
         adj_m,pos = adjacency_matrix_motion()
-        #print(adj_m)
-        adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=5)
+        adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=10)
         threshold = 0  # Adjust as needed
         source_nodes = []
         target_nodes = []
@@ -204,7 +202,6 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
     with torch.no_grad():
         for i in range(0, input_tensor.shape[0], batch_size):
             batch = input_tensor[i:i + batch_size]  # Select current batch
-            #print(ShallowSGCNNet.__module__)
             if isinstance(model,ShallowSGCNNet):
                 
                 _ = model(batch,edge_index.to(device))
@@ -274,9 +271,6 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
             #kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=None)
            # kernel_block = cosine_kernel(batch_activations,batch_activations_transpose)
             #kernel_block = polynomial_kernel(batch_activations,batch_activations_transpose)
-            #print("am_about_to_laplace")
-            #print("kernel shape:",kernel_block.shape)
-            #print("block shape:",abs(start_idx_col-end_idx_col),abs(start_idx_row-end_idx_row))
             #TODO
             full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block.to('cpu')
             full_kernel[start_idx_row:end_idx_row, start_idx_col:end_idx_col] = kernel_block.T  # Use symmetry
@@ -346,7 +340,6 @@ def compute_multi_model_kernels(
         if not model_file.endswith('state.pth'):
             model_name, loss, seed = model_file.rsplit('_', 2)
             model = load_model(model_file, models_directory)
-            print(model)
             model.to(device)
             model.eval()
             
@@ -401,8 +394,6 @@ def compute_all_model_kernels(
     for direc in model_directories:
         model_path = os.path.join(target_directory,direc)
         layer_list,model_list = compute_multi_model_kernels(model_path, **kwargs)
-        print(layer_list)
-        print("model list: ",model_list)
         model_name = model_list[0]
         kernel_specific_path = os.path.join(kernels_directory,model_name)
         with open(os.path.join(kernel_specific_path, f"{direc}_list1.json"), "w") as f_layer:
@@ -467,14 +458,12 @@ def compute_cross_model_cka(root_dir: str):
                     print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
             
         cka_inner /= len(model_type2_kernels)
-        print(len(model_type2_kernels))
         cka_results += cka_inner
         
         
         print(f"Avg CKA result for kernel {i}: {cka_inner}")
 
     cka_results /= len(model_type1_kernels)
-    print(len(model_type1_kernels))
     return cka_results  # Return the CKA similarity matrix
 
 
@@ -566,7 +555,7 @@ def compute_all_model_CKA_lowmem(root_dir: str, output_dir: str):
         np.save(result_path, cka_results)
         
         logging.info("Saved CKA results to %s", result_path)
-        print(f"Saved results to {result_path}")
+        print(f"Saved results to {result_path}",flush=True)
         #results = [future.result() for future in futures]
 
     
@@ -589,7 +578,6 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path = os.path.join(model_dir1, filename)
-        print(model_path)
         kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
         model_type1_kernels.append(kernel)  # For the first model type
         try:
@@ -603,7 +591,6 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path = os.path.join(model_dir2, filename)
-        print(model_path)
         kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
         try:
             _, model_name2 = model_dir2.rsplit('/', 1)
@@ -612,11 +599,7 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
             print("trying different slash")
             _, model_name2 = model_dir2.rsplit('\\',1)
         model_type2_kernels.append(kernel)  # For the second model type
-    print(model_type1_kernels)
-    print(model_type2_kernels)
     cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
-    print(cka_results.shape)
-
     layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type1_kernels[0].keys())}
     layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type2_kernels[0].keys())}
     if not os.path.exists("cka_csv"):
@@ -640,7 +623,6 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
                     print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
             
         cka_inner /= len(model_type2_kernels)
-        print(len(model_type2_kernels))
         cka_results += cka_inner
         
         
@@ -653,12 +635,12 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
     df.to_csv(f"cka_csv/CKA_{model_name1}_vs_{model_name2}.csv", sep ="\t", index = False, header = True)
 
     cka_results /= len(model_type1_kernels)
-    print(len(model_type1_kernels))
     return cka_results  # Return the CKA similarity matrix
     
 def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
     # Set device to GPU if available, otherwise fallback to CPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("found device:",device)
 
     #model_type1_kernels = []  # For the first model type
     og_kernels_count = 0
@@ -674,7 +656,7 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path = os.path.join(model_dir1, filename)
-        og_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        og_kernel = torch.load(model_path, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
         #model_type1_kernels.append(kernel)  # For the first model type
         try:
             _, model_name1 = model_dir1.rsplit('/', 1)
@@ -688,7 +670,7 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
             continue
         model_path = os.path.join(model_dir2, filename)
         #print("compare to:",model_path)
-        comp_kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
+        comp_kernel = torch.load(model_path, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
         found_kernels +=1
         try:
             _, model_name2 = model_dir2.rsplit('/', 1)
@@ -697,11 +679,8 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
             print("trying different slash")
             _, model_name2 = model_dir2.rsplit('\\',1)
         #model_type2_kernels.append(kernel)  # For the second model type
-    #print(model_type1_kernels)
-    #print(model_type2_kernels)
-    cka_results = np.zeros((len(og_kernel), len(comp_kernel)))
-    print(cka_results.shape)
 
+    cka_results = np.zeros((len(og_kernel), len(comp_kernel)))
     layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(og_kernel.keys())}
     layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(comp_kernel.keys())}
     if not os.path.exists("cka_csv"):
@@ -712,16 +691,14 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path1 = os.path.join(model_dir1, filename)
-        print("og kernel:",model_path1)
-        og_kernel = torch.load(model_path1, map_location=device)  # Load kernel dictionary onto the device
+        og_kernel = torch.load(model_path1, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
         og_kernels_count +=1
         cka_inner = np.zeros((len(og_kernel), len(comp_kernel)))  # Initialize inner CKA matrix for each kernel_A
         for filename in os.listdir(model_dir2):
             if not filename.endswith('.pth'):
                 continue
             model_path2 = os.path.join(model_dir2, filename)
-            print("compare kernel:",model_path2)
-            comp_kernel = torch.load(model_path2, map_location=device)  # Load kernel dictionary onto the device
+            comp_kernel = torch.load(model_path2, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
             comp_kernels_count +=1
             for layer1, K_x in og_kernel.items():
                 for layer2, K_y in comp_kernel.items():
@@ -734,12 +711,11 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
                     panda_data.append((layer1,layer2,cka_value))
                     
                     cka_inner[idx1, idx2] += cka_value
-                    print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}")
+                    print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}",flush=True)
             
         cka_inner /=found_kernels
-        print(found_kernels)
         cka_results += cka_inner
-        print(f"Avg CKA result for kernel {og_kernels_count}: {cka_inner}")
+        print(f"Avg CKA result for kernel {og_kernels_count}: {cka_inner}",flush=True)
 
     df = pd.DataFrame([(cka_value[0],cka_value[1],cka_value[2]) for cka_value in panda_data],
                             columns=['Layer1', 'Layer2', 'CKA_Value'])
@@ -747,7 +723,6 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
     df.to_csv(f"cka_csv/CKA_{model_name1}_vs_{model_name2}.csv", sep ="\t", index = False, header = True)
 
     cka_results /= og_kernels_count
-    print(og_kernels_count)
     return cka_results  # Return the CKA similarity matrix
 
 def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
@@ -968,6 +943,8 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
     for file in cka_files:
         model1, model2 = file.replace(".npy", "").split("_vs_")
         cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Extract scalar value
+        print("file:",file)
+        print("model1:",model1, "model2:",model2, "cka value:",cka_value)
         i, j = model_names.index(model1), model_names.index(model2)
         cka_matrix[i, j] = cka_value
         cka_matrix[j, i] = cka_value  # Ensure symmetry
@@ -1109,6 +1086,10 @@ def adjacency_matrix_distance_FACED(positions, delta=1.0):
             if i != j:  # Ignore self-connections
                 d_ij = distance_matrix[i, j] * 3.5  # Convert to physical distance
                 adj_matrix[i, j] = min(1, delta / (d_ij ** 2)) if d_ij > 0 else 0
+                adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
+            else:
+                d_ij = distance_matrix[i,j]
+                adj_matrix[i, j] = 1
                 adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
     
     return distance_matrix, adj_matrix
