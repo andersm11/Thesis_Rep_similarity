@@ -3,6 +3,7 @@ from braindecode.util import set_random_seeds
 import torch.nn.functional as F
 import wandb
 import importlib
+import os
 import shallow_laurits_faced
 from shallow_laurits_faced import ShallowFBCSPNet
 from weight_init import init_weights
@@ -169,9 +170,9 @@ def test_model(dataloader: DataLoader, model: torch.nn.Module, loss_fn, print_ba
     return test_loss, overall_accuracy, class_accuracies, all_preds, all_targets
 
 
-save_path ="models/"
+save_path ="trained_models/"
 
-seeds = [99999]#,182726,91111222,44552222,12223111,100300,47456655,4788347,77766666,809890]
+seeds = [99999,182726,91111222,44552222,12223111,100300,47456655,4788347,77766666,809890]
 for _seed in seeds:
     seed = _seed
     set_random_seeds(seed=seed, cuda=cuda)
@@ -245,7 +246,7 @@ for _seed in seeds:
     # # Save predictions & true labels for later use (confusion matrix)
     # wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
     wandb.finish()
-
+    os.makedirs(save_path, exist_ok=True)
     torch.save(model, save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}.pth")
     torch.save(model.state_dict(), save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}_state.pth")
 

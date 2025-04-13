@@ -1087,10 +1087,10 @@ def adjacency_matrix_distance_FACED(positions, delta=1.0):
                 d_ij = distance_matrix[i, j] * 3.5  # Convert to physical distance
                 adj_matrix[i, j] = min(1, delta / (d_ij ** 2)) if d_ij > 0 else 0
                 adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
-            else:
-                d_ij = distance_matrix[i,j]
-                adj_matrix[i, j] = 1
-                adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
+            # else:
+            #     d_ij = distance_matrix[i,j]
+            #     adj_matrix[i, j] = 0.8
+            #     adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
     
     return distance_matrix, adj_matrix
             

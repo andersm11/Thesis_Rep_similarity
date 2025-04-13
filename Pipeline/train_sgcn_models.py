@@ -3,6 +3,7 @@ from braindecode.util import set_random_seeds
 import torch.nn.functional as F
 import wandb
 import importlib
+import os
 import SGCN_FACED
 from SGCN_FACED import ShallowSGCNNet
 from weight_init import init_weights
@@ -193,7 +194,7 @@ def get_e_index(dm):
 
 
 
-save_path ="models/"
+save_path ="trained_models/"
 
 seeds = [99999]#,182726,91111222,44552222,12223111,100300,47456655,4788347,77766666,809890]
 for _seed in seeds:
@@ -201,7 +202,7 @@ for _seed in seeds:
     set_random_seeds(seed=seed, cuda=cuda)
     adj_m,pos = adjacency_matrix_FACED()
     #print(adj_m)
-    adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=8)
+    adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=6)
     dm
     torch_tensor = torch.from_numpy(dm)
     edge_weight = torch_tensor.reshape(-1)
@@ -306,7 +307,7 @@ for _seed in seeds:
     # # Save predictions & true labels for later use (confusion matrix)
     # wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
     wandb.finish()
-
+    os.makedirs(save_path, exist_ok=True)
     torch.save(model, save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}.pth")
     torch.save(model.state_dict(), save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}_state.pth")
 
