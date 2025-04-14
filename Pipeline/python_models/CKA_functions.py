@@ -931,9 +931,9 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
     ))  
 
     # Ensure 'Shallow' is placed last in the sorted list
-    if "Shallow" in model_names:
-        model_names.remove("Shallow")
-        model_names.append("Shallow")
+    if "ShallowBigData_model_temponly" in model_names:
+        model_names.remove("ShallowBigData_model_temponly")
+        model_names.append("ShallowFBCSPNet")
 
     # Initialize an NxN matrix
     num_models = len(model_names)
@@ -945,6 +945,10 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
         cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Extract scalar value
         print("file:",file)
         print("model1:",model1, "model2:",model2, "cka value:",cka_value)
+        if model2 == "ShallowBigData_model_temponly":
+            model2 = "ShallowFBCSPNet"
+        if model1 == "ShallowBigData_model_temponly":
+            model1 = "ShallowFBCSPNet"
         i, j = model_names.index(model1), model_names.index(model2)
         cka_matrix[i, j] = cka_value
         cka_matrix[j, i] = cka_value  # Ensure symmetry
