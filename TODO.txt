@@ -1,2 +1,6 @@
-redo graph model with actauly input format. wth
-redo attention with spatial attention over time
+CHANGEs for model training:
+- Learning rate
+- batch size
+- data shuffled or not?
+- batch norm? pooling? kernel?
+- activation func ?

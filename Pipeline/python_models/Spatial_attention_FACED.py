@@ -63,62 +63,44 @@ def visualize_difference(x, out, batch_idx=0, kernel_idx=0):
 
 
 class SpatialAttention(nn.Module):
-    def __init__(self, in_channels: int, pool_size: int, num_heads: int = 2):  
+    def __init__(self, in_channels: int):
         super().__init__()
         self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=(1, 1), bias=False)
 
-        # Pooling to Reduce Dimensionality
-        self.pool = nn.MaxPool2d((1, pool_size))
-
     def forward(self, x):
-        B, K, C, T = x.shape  
-        attention_map = self.conv(x) 
- 
-        attention_map = attention_map.view(-1, x.size(2), x.size(3))  # Shape: [B*K, C, T]
-        # **Global Average Pooling over Time**
-        attention_map =  torch.sigmoid(attention_map)
-        attention_map_avg = attention_map.mean(dim=2)  
-        attention_map_avg = attention_map_avg.view(x.size(0), x.size(1), x.size(2))  
-        #print(attention_map_avg.shape)
-        attention_map = attention_map_avg.unsqueeze(-1)  # (B, K, C, 1)
-       #print(attention_map.shape)
-        x = x * attention_map
-
-        # **Apply Pooling**
-        x = self.pool(x)
-
-        return x  # Weighted Feature Maps
+        # x: [B, K, C, T]
+        attention_map = self.conv(x)           
+        attention_map = torch.sigmoid(attention_map)  
+        x = x * attention_map  
+        return x
 
 class ShallowAttentionNet(nn.Module):
-    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=50):
+    def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=20, kernel_size=25, pool_size=100):
         super(ShallowAttentionNet, self).__init__()
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
-        self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))  # Reduce num_kernels to 5
-        self.spatial_att = SpatialAttention(num_kernels,pool_size//10)
-
+        self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))  
+        self.tbatch_norm = nn.BatchNorm2d(num_kernels)
+        self.tpool = nn.AvgPool2d((1, 2))
+        self.spatial_att = SpatialAttention(num_kernels)
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-
-        # **Major change: Reduce FC layer complexity**
-        reduced_size = num_kernels * n_chans * ((n_times - kernel_size + 1) // (pool_size*8))
-        self.fc = nn.Linear(1280 , n_outputs)  # No dependence on n_chans
+        self.fc = nn.Linear(640 , n_outputs)  
 
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
         x = F.elu(x)
+        x = self.tbatch_norm(x)
+        x = self.tpool(x)
+        x = self.dropout(x)
         x = self.spatial_att(x)
-
         x = F.elu(x)
         x = self.batch_norm(x)
         x = self.pool(x)
-
-       # x = x.mean(dim=2)  # **Global Average Pooling across electrodes**
-        x = self.dropout(x)
         x = x.view(x.size(0), -1)
-       # print(x.shape)
+        x = self.dropout(x)
         x = self.fc(x)
         return x
