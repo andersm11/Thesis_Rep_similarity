@@ -39,21 +39,15 @@ cuda = torch.cuda.is_available()  # check if GPU is available, if True chooses t
 device = "cuda" if cuda else "cpu"
 if cuda:
     torch.backends.cudnn.benchmark = True
-seed = 282828
-set_random_seeds(seed=seed, cuda=cuda)
+
 
 n_classes = 3
-classes = list(range(n_classes))
-# Extract number of chans and time steps from dataset
 n_channels = 32
 input_window_samples = 400
 
 print("n_classes: ", n_classes)
 print("n_channels:", n_channels)
 print("input_window_samples size:", input_window_samples)
-
-
-# Define a method for training one epoch
 
 
 def train_one_epoch(
@@ -68,32 +62,15 @@ def train_one_epoch(
 
     for batch_idx, (X, y) in progress_bar:
         X, y = X.to(device), y.to(device)
-        #print(y)
-        #print(X.shape)
         optimizer.zero_grad()
         pred = model(X)
-
-
-        #print(y.shape)
-        #print(pred.shape)
         loss = loss_fn(pred, y)
         loss.backward()
         optimizer.step()  # update the model weights
         optimizer.zero_grad()
-        #print(loss.item())
-        #print(loss)
-        #print(train_loss)
         train_loss += loss.item()
         correct += (pred.argmax(1) == y).sum().item()
 
-        #if print_batch_stats:
-        #    progress_bar.set_description(
-        #        f"Epoch {epoch}/{n_epochs}, "
-        #        f"Batch {batch_idx + 1}/{len(dataloader)}, "
-        #        f"Loss: {loss.item():.6f}"
-        #    )
-
-    # Update the learning rate
     scheduler.step()
 
     correct /= len(dataloader.dataset)
@@ -157,16 +134,7 @@ def test_model(dataloader: DataLoader, model: torch.nn.Module, loss_fn, print_ba
     # Compute overall accuracy
     test_loss /= n_batches
     overall_accuracy = (correct / size) * 100
-
-    # # Print per-class accuracy
-    # print("\nClass-wise Accuracy:")
-    # for cls, acc in class_accuracies.items():
-    #     print(f"  Class {cls}: {acc:.2f}%")
-
-    # print(f"Test Accuracy: {overall_accuracy:.1f}%, Test Loss: {test_loss:.6f}\n")
-
-
-
+    
     return test_loss, overall_accuracy, class_accuracies, all_preds, all_targets
 
 
@@ -181,44 +149,39 @@ for _seed in seeds:
         n_chans=n_channels,
         n_outputs=n_classes,
         n_times=input_window_samples,
+        dropout = 0.5,
+        num_kernels = 50,
+        kernel_size = 50,
+        pool_size = 50
+        
     )
 
     if cuda:
         model.cuda()
 
-    # Initialize Weights & Biases
     wandb.init(project="Master Thesis", name=f"{model.__class__.__name__} {seed}")
     model.apply(init_weights)
-    # Define hyperparameters
-    lr = 1e-5
+
+    lr = 1e-4
     weight_decay = 1e-4
-    batch_size = 64  # Start with 124
-    n_epochs = 5000
+    batch_size = 64 
+    n_epochs = 1000
 
     final_acc = 0.0
 
-    # Log hyperparameters to wandb
     wandb.config.update({
         "learning_rate": lr,
         "weight_decay": weight_decay,
         "batch_size": batch_size,
         "epochs": n_epochs
     })
-    # Create optimizer with per-parameter learning rates
     optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=n_epochs - 1)
 
-    # Define loss function
     loss_fn = CrossEntropyLoss()
 
-    # Create DataLoaders
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=batch_size)
-
-    # Initialize lists to store all predictions & targets
-    # all_preds, all_targets = [], []
-
-    # Training loop
     for epoch in range(1, n_epochs + 1):
         #print(f"Epoch {epoch}/{n_epochs}: ", end="")
 
@@ -240,11 +203,6 @@ for _seed in seeds:
         })
 
 
-    # all_preds = np.array(all_preds)
-    # all_targets = np.array(all_targets)
-
-    # # Save predictions & true labels for later use (confusion matrix)
-    # wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
     wandb.finish()
     os.makedirs(save_path, exist_ok=True)
     torch.save(model, save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}.pth")

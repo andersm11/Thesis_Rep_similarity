@@ -39,7 +39,7 @@ cuda = torch.cuda.is_available()  # check if GPU is available, if True chooses t
 device = "cuda" if cuda else "cpu"
 if cuda:
     torch.backends.cudnn.benchmark = True
-seed = 282828
+seed = 99999
 set_random_seeds(seed=seed, cuda=cuda)
 
 n_classes = 3
@@ -181,6 +181,10 @@ for _seed in seeds:
         n_chans=n_channels,
         n_outputs=n_classes,
         n_times=input_window_samples,
+        dropout = 0.5,
+        num_kernels = 50,
+        kernel_size=25,
+        pool_size = 50
     )
 
     if cuda:
@@ -190,10 +194,10 @@ for _seed in seeds:
     wandb.init(project="Master Thesis", name=f"{model.__class__.__name__} {seed}")
     model.apply(init_weights)
     # Define hyperparameters
-    lr = 1e-5
+    lr = 1e-4
     weight_decay = 1e-4
-    batch_size = 64  # Start with 124
-    n_epochs = 5000
+    batch_size = 32  # Start with 124
+    n_epochs = 500
 
     final_acc = 0.0
 
@@ -205,23 +209,16 @@ for _seed in seeds:
         "epochs": n_epochs
     })
 
-    # Create optimizer with per-parameter learning rates
     optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=n_epochs - 1)
 
-    # Define loss function
     loss_fn = CrossEntropyLoss()
 
-    # Create DataLoaders
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=batch_size)
 
-    # Initialize lists to store all predictions & targets
-    # all_preds, all_targets = [], []
 
-    # Training loop
     for epoch in range(1, n_epochs + 1):
-        #print(f"Epoch {epoch}/{n_epochs}: ", end="")
 
         train_loss, train_accuracy = train_one_epoch(
             train_loader, model, loss_fn, optimizer, scheduler, epoch, device
@@ -239,13 +236,6 @@ for _seed in seeds:
             "learning_rate": scheduler.get_last_lr()[0],
             **{f"class_{class_idx}_accuracy": acc for class_idx, acc in class_accuracies.items()},
         })
-
-
-    # all_preds = np.array(all_preds)
-    # all_targets = np.array(all_targets)
-
-    # # Save predictions & true labels for later use (confusion matrix)
-    # wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
     wandb.finish()
     os.makedirs(save_path, exist_ok=True)
     torch.save(model, save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}.pth")

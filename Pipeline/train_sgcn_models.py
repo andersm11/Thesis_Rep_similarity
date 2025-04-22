@@ -192,6 +192,7 @@ def get_e_index(dm):
 
 
 
+import sys
 
 
 save_path ="trained_models/"
@@ -207,15 +208,27 @@ for _seed in seeds:
     torch_tensor = torch.from_numpy(dm)
     edge_weight = torch_tensor.reshape(-1)
     #print(edge_weight.shape)
-    model = ShallowSGCNNet(
-        n_chans=n_channels,
-        n_outputs=n_classes,
-        n_times=input_window_samples,
-        edge_weights=edge_weight
-    )
+    try:
+        model = ShallowSGCNNet(
+            n_chans=n_channels,
+            n_outputs=n_classes,
+            n_times=input_window_samples,
+            edge_weights=edge_weight
+        )
 
-    if cuda:
-        model.cuda()
+        if cuda:
+            model.cuda()
+
+    except Exception as e:
+        print(f"[!] Model creation failed for seed={seed}: {e}")
+
+        # Start a minimal W&B run just to log this failure
+        wandb.init()
+        wandb.run.summary["run_status"] = "model_creation_failed"
+        wandb.run.summary["seed"] = seed
+        wandb.run.summary["error"] = str(e)
+        wandb.finish(exit_code=1)
+        sys.exit(0)
 
     edge_index = get_e_index(dm)
     # Initialize Weights & Biases
@@ -229,7 +242,6 @@ for _seed in seeds:
 
     final_acc = 0.0
 
-    # Log hyperparameters to wandb
     wandb.config.update({
         "learning_rate": lr,
         "weight_decay": weight_decay,
@@ -240,24 +252,17 @@ for _seed in seeds:
     edge_params = [model.sgconv.edge_weights]
     other_params = [p for n, p in model.named_parameters() if n != 'sgconv.edge_weights']
 
-    # Create optimizer with per-parameter learning rates
     optimizer = AdamW([
-        {'params': edge_params, 'lr': lr*0.1},       # High LR for edge weights
+        {'params': edge_params, 'lr': lr*2},       # High LR for edge weights
         {'params': other_params, 'lr': lr}       # Normal LR for the rest
     ], weight_decay=weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=n_epochs - 1)
 
-    # Define loss function
     loss_fn = CrossEntropyLoss()
 
-    # Create DataLoaders
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=batch_size)
 
-    # Initialize lists to store all predictions & targets
-    # all_preds, all_targets = [], []
-
-    # Training loop
     for epoch in range(1, n_epochs + 1):
         #print(f"Epoch {epoch}/{n_epochs}: ", end="")
 
@@ -268,27 +273,20 @@ for _seed in seeds:
         test_loss, test_accuracy, class_accuracies, batch_preds, batch_targets = test_model(test_loader, model,edge_index, loss_fn,print_batch_stats=False)
         final_acc = test_accuracy
 
-        # # Store predictions & labels for confusion matrix
-        # all_preds.extend(batch_preds)
-        # all_targets.extend(batch_targets)
 
         adj_matrix = model.sgconv.edge_weights.detach().cpu().numpy().reshape(32,32)
 
-        # Create a plot
         fig, ax = plt.subplots(figsize=(8, 8))
         cax = ax.matshow(adj_matrix, cmap='viridis', interpolation='nearest',vmin=0)  # Adjust color map
         fig.colorbar(cax)
 
-            # Convert the figure to a NumPy array
         plt.tight_layout()
         buf = io.BytesIO()
         fig.savefig(buf, format="png")
         buf.seek(0)
 
-        # Convert the image to a PIL image
         pil_img = PILImage.open(buf)
 
-        # Log the adjacency matrix image directly to WandB
         wandb.log({
             "epoch": epoch,
             "train_loss": train_loss,
@@ -300,12 +298,6 @@ for _seed in seeds:
             "adj_matrix": wandb.Image(pil_img),  # Log the PIL image directly
         })
 
-
-    # all_preds = np.array(all_preds)
-    # all_targets = np.array(all_targets)
-
-    # # Save predictions & true labels for later use (confusion matrix)
-    # wandb.log({"all_preds": all_preds.tolist(), "all_targets": all_targets.tolist()})
     wandb.finish()
     os.makedirs(save_path, exist_ok=True)
     torch.save(model, save_path+f"{model.__class__.__name__}_{math.ceil(final_acc)}_{seed}.pth")

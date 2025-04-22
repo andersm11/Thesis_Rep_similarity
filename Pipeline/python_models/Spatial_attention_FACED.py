@@ -68,10 +68,14 @@ class SpatialAttention(nn.Module):
         self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=(1, 1), bias=False)
 
     def forward(self, x):
-        # x: [B, K, C, T]
-        attention_map = self.conv(x)           
-        attention_map = torch.sigmoid(attention_map)  
-        x = x * attention_map  
+        B, K, C, T = x.shape  
+        attention_map = self.conv(x) 
+        attention_map = attention_map.view(-1, x.size(2), x.size(3))  # Shape: [B*K, C, T]
+        attention_map =  torch.sigmoid(attention_map)
+        attention_map_avg = attention_map.mean(dim=2)  
+        attention_map_avg = attention_map_avg.view(x.size(0), x.size(1), x.size(2))  
+        attention_map = attention_map_avg.unsqueeze(-1)  # (B, K, C, 1)
+        x = x * attention_map
         return x
 
 class ShallowAttentionNet(nn.Module):
@@ -81,21 +85,37 @@ class ShallowAttentionNet(nn.Module):
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))  
-        self.tbatch_norm = nn.BatchNorm2d(num_kernels)
-        self.tpool = nn.AvgPool2d((1, 2))
+        #self.tbatch_norm = nn.BatchNorm2d(num_kernels)
+        #self.tpool = nn.AvgPool2d((1, 2))
         self.spatial_att = SpatialAttention(num_kernels)
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)
-        self.fc = nn.Linear(640 , n_outputs)  
+        dummy_input = torch.zeros(1, 1, self.n_chans, self.n_times, device=next(self.parameters()).device)
+        feature_size = self._get_flattened_size(dummy_input)
+        self.fc = nn.Linear(feature_size , n_outputs)  
+        
+    def _get_flattened_size(self, x):
+        with torch.no_grad():
+            x = self.temporal(x)
+            x = F.elu(x)
+            #x = self.tbatch_norm(x)
+            #x = self.tpool(x)
+            x = self.dropout(x)
+            x = self.spatial_att(x)
+            x = F.elu(x)
+            x = self.batch_norm(x)
+            x = self.pool(x)
+            x = x.view(x.size(0), -1)
+            return x.size(1)
 
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
         x = F.elu(x)
-        x = self.tbatch_norm(x)
-        x = self.tpool(x)
-        x = self.dropout(x)
+        #x = self.tbatch_norm(x)
+        #x = self.tpool(x)
+        #x = self.dropout(x)
         x = self.spatial_att(x)
         x = F.elu(x)
         x = self.batch_norm(x)
