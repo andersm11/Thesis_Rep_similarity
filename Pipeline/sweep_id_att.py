@@ -7,13 +7,13 @@ sweep_config = {
     'method': 'bayes',  # or 'random' / 'grid'
     'metric': {'name': 'test_accuracy', 'goal': 'maximize'},
     'parameters': {
-        'lr': {'values': [1e-3, 1e-4, 5e-5]},
-        'batch_size': {'values': [32,64, 128, 256]},
-        'weight_decay': {'values': [0.0, 1e-4, 1e-2]},
+        'lr': {'value': 1e-3},
+        'batch_size': {'values': [32,64, 256]},
+        'weight_decay': {'values': [0.0 ,1e-2]},
         'epochs': {'value': 100},
-        'kernels':{'values':[20,40,50,60]},
-        'kernel_size':{'values':[10,25,50]},
-        'pool_size':{'values':[10,20,30,50]}
+        'kernels':{'values':[40,60,80]},
+        'kernel_size':{'values':[25,50]},
+        'pool_size':{'values':[30,50,80,100]}
     }
 }
 
