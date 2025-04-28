@@ -930,11 +930,6 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
     ))  
 
-    # Ensure 'Shallow' is placed last in the sorted list
-    if "ShallowBigData_model_temponly" in model_names:
-        model_names.remove("ShallowBigData_model_temponly")
-        model_names.append("ShallowFBCSPNet")
-
     # Initialize an NxN matrix
     num_models = len(model_names)
     cka_matrix = np.zeros((num_models, num_models))
@@ -945,10 +940,6 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
         cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Extract scalar value
         print("file:",file)
         print("model1:",model1, "model2:",model2, "cka value:",cka_value)
-        if model2 == "ShallowBigData_model_temponly":
-            model2 = "ShallowFBCSPNet"
-        if model1 == "ShallowBigData_model_temponly":
-            model1 = "ShallowFBCSPNet"
         i, j = model_names.index(model1), model_names.index(model2)
         cka_matrix[i, j] = cka_value
         cka_matrix[j, i] = cka_value  # Ensure symmetry
@@ -967,6 +958,82 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
     plt.ylabel('Model')
     
     # Save heatmap
+    filepath = os.path.join(output_folder, f"{title}.png")
+    plt.savefig(filepath, dpi=300, bbox_inches="tight")
+    plt.close()
+    
+    print(f"Heatmap saved to {filepath}")
+
+
+def compose_heat_matrix(result_folder: str, output_folder: str, model_path: str, data_loader, title: str = "cka heatmap"):
+    """
+    Compose CKA heatmap and show average model accuracies.
+
+    Args:
+        result_folder (str): Folder containing CKA .npy result files.
+        output_folder (str): Folder to save the generated heatmap.
+        model_path (str): Path where model folders are stored.
+        data_loader: DataLoader used for evaluating the models.
+        title (str): Title of the heatmap.
+    """
+    os.makedirs(output_folder, exist_ok=True)
+    
+    # Read all .npy files
+    cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
+    
+    # Get unique model names
+    model_names = sorted(set(
+        name.split("_vs_")[0] for name in cka_files
+    ).union(
+        name.split("_vs_")[1].replace(".npy", "") for name in cka_files
+    ))
+    from performance_functions import get_labels, compute_accuracy
+
+
+    # --- Compute average accuracies ---
+    model_accuracies = {}
+    for model_name in model_names:
+        model_folder = os.path.join(model_path, model_name)
+        model_files = [f for f in os.listdir(model_folder) if f.endswith(".pth") and 'state' not in f.lower()]
+        
+        accuracies = []
+        for model_file in model_files:
+            parts = model_file.replace(".pth", "").split("_")
+            acc = parts[1]
+            accuracies.append(float(acc))
+        
+        avg_acc = np.mean(accuracies)  # Convert to percentage
+        model_accuracies[model_name] = avg_acc
+        print(f"Model {model_name}: Average Accuracy = {avg_acc:.2f}%")
+
+    # Create updated model names with accuracies
+    model_names_with_acc = [f"{name} ({model_accuracies[name]:.2f}%)" for name in model_names]
+
+    # --- Construct CKA matrix ---
+    num_models = len(model_names)
+    cka_matrix = np.zeros((num_models, num_models))
+    
+    for file in cka_files:
+        model1, model2 = file.replace(".npy", "").split("_vs_")
+        cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Scalar
+        
+        i, j = model_names.index(model1), model_names.index(model2)
+        cka_matrix[i, j] = cka_value
+        cka_matrix[j, i] = cka_value  # Symmetric
+
+    # Flip matrix
+    cka_matrix = np.flipud(cka_matrix)
+    model_names_with_acc_reversed = list(reversed(model_names_with_acc))
+
+    # --- Plot heatmap ---
+    df = pd.DataFrame(cka_matrix, index=model_names_with_acc_reversed, columns=model_names_with_acc)
+
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
+    plt.title(title)
+    plt.xlabel('Model (Avg Accuracy)')
+    plt.ylabel('Model (Avg Accuracy)')
+    
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
     plt.close()

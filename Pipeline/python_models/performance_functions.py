@@ -32,14 +32,26 @@ def get_labels(model,dataloader):
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
-    for batch_idx, (X, y, _) in data:
-        if isinstance(model,ShallowSGCNNet):
-            preds = model(X,edge_index)
-        else:
-            preds = model(X)
-        all_truths.append(y)
-        pred_labels = torch.argmax(preds, dim=1)  # Use torch.argmax to get the predicted labels
-        all_preds.append(pred_labels)  # Append the tensor (not a list)
+    try:
+        for batch_idx, (X, y, _) in data:
+            if isinstance(model,ShallowSGCNNet):
+                preds = model(X,edge_index)
+            else:
+                preds = model(X)
+            all_truths.append(y)
+            pred_labels = torch.argmax(preds, dim=1)  # Use torch.argmax to get the predicted labels
+            all_preds.append(pred_labels)  # Append the tensor (not a list)
+    except Exception as e:
+        print(e)
+        print("trying to 2 outputs only")
+        for batch_idx, (X, y) in data:
+            if isinstance(model,ShallowSGCNNet):
+                preds = model(X,edge_index)
+            else:
+                preds = model(X)
+            all_truths.append(y)
+            pred_labels = torch.argmax(preds, dim=1)  # Use torch.argmax to get the predicted labels
+            all_preds.append(pred_labels)  # Append the tensor (not a list)
 
     # Concatenate all the predictions into a single tensor
     all_preds = torch.cat(all_preds, dim=0)  # Concatenate the list of tensors

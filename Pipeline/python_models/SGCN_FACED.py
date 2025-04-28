@@ -8,19 +8,7 @@ from torch_geometric.nn import SGConv, global_add_pool
 import torch_geometric.utils as pyg_utils
 from CKA_functions import adjacency_matrix_FACED,adjacency_matrix_distance_FACED
 
-    
-def check_values(name, tensor):
-        if torch.isnan(tensor).any():
-            print(f"🚨 NaN detected in {name}!")
-        if (tensor.abs() > 1e6).any():
-            print(f"⚠️ Exploding value (>1e6) in {name}, Max: {tensor.max().item()}")
-        if (tensor.abs() < 1e-6).all():
-            print(f"🛑 All values ~0 in {name}")
-        if (tensor == 0).any():
-            print("⚠️ Warning: Edge weights contain zeros! This may cause NaNs in SGConv.")
-        if  (tensor.abs() < 1e-6).all() or (tensor.abs() > 1e6).any() or torch.isnan(tensor).any():
-            print(tensor)
-        
+       
 
 class SimpleGCNNet(torch.nn.Module):
     def __init__(self, time_steps:int,edge_weights, num_hiddens:int, K=1, dropout=0.5, domain_adaptation=""):
@@ -33,6 +21,7 @@ class SimpleGCNNet(torch.nn.Module):
         #mask = self.edge_weights >= self.threshold
         #filtered_edge_index = edge_index[:, mask]
         #filtered_edge_weights = self.edge_weights[mask]
+        x = F.normalize(x, p=2, dim=-1)
         x = self.sgconv(x, edge_index, self.edge_weights)
         return x
 
