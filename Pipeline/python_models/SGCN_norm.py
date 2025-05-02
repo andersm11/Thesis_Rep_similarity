@@ -30,7 +30,7 @@ class SimpleGCNNet(torch.nn.Module):
         #self.edge_weights.data[F.elu(self.edge_weights.data)  <=  0] = self.epsilon 
        # B,K,C,T= x.shape
        # x = x.view(B, C, K * T) 
-        filtered_weights = F.softplus(self.edge_weights)
+        filtered_weights = F.sigmoid(self.edge_weights)
         x = F.normalize(x, p=2, dim=-1)
         x = self.sgconv(x, edge_index, filtered_weights)
         return x
