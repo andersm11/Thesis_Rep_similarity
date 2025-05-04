@@ -57,12 +57,7 @@ class ShallowFBCSPNet(nn.Module):
         self.n_chans = n_chans
         self.n_outputs = n_outputs
         self.n_times = n_times
-        #self.n_subjs = n_subjs
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
-        # self.temporal_layers = nn.ModuleDict({
-        #     f'subj-{i}': nn.Conv2d(1, num_kernels, (1, kernel_size))
-        #     for i in range(n_subjs)
-        # })
         self.spatial = nn.Conv2d(num_kernels, num_kernels, (n_chans, 1))
         self.pool = nn.AvgPool2d((1, pool_size))
         self.batch_norm = nn.BatchNorm2d(num_kernels)
@@ -71,23 +66,14 @@ class ShallowFBCSPNet(nn.Module):
 
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
-        #subj_id = subject[0].item()
         x = self.temporal(x)
-        #print("Temporal Shape: ", x.shape)
-        # x = self.temporal_layers[f'subj-{subj_id}'](x)
         x = self.spatial(x)
-        #print("Spatial :", x.shape)
         x = F.elu(x)
-        #print("elu :", x.shape)
         x = self.batch_norm(x)
-        #print("Batch_norm :", x.shape)
         x = self.pool(x)
-        #print("Pool :", x.shape)
         x = x.view(x.size(0), -1)
         x = self.dropout(x)
-        #print("Dropout :", x.shape )
         x = self.fc(x)
-        #print("fc: ", x.shape)
         return x
     
 

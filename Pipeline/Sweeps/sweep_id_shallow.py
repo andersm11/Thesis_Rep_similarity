@@ -9,12 +9,13 @@ sweep_config = {
     'metric': {'name': 'test_accuracy', 'goal': 'maximize'},
     'parameters': {
         'lr': {'value': 1e-3},
-        'batch_size': {'values': [32,64, 128, 256]},
-        'weight_decay': {'values': [0.0, 1e-2]},
+        'batch_size': {'values': [32,64, 128]},
+        'weight_decay': {'values': [0.0, 1e-4]},
+        'dropout': {'values':[0.5,0.7]},
         'epochs': {'value': 100},
         'kernels':{'values':[40,50,60]},
-        'kernel_size':{'values':[25,50]},
-        'pool_size':{'values':[50,80,100]}
+        'kernel_size':{'values':[25,50,80]},
+        'pool_size':{'values':[25,50,100,200]}
     }
 }
 
