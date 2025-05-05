@@ -1,6 +1,4 @@
-CHANGEs for model training:
-- Learning rate
-- batch size
-- data shuffled or not?
-- batch norm? pooling? kernel?
-- activation func ?
+performance of models
+CKA for all models
+CKA for .fc
+CKA on specific features

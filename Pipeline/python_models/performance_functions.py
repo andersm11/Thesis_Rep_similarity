@@ -9,22 +9,40 @@ import pandas as pd
 import itertools
 import math
 from torch.utils.data import DataLoader
-from CKA_functions import load_dataset, load_model,adjacency_matrix_motion,adjacency_matrix_distance_motion
-from SGCN import ShallowSGCNNet
+from CKA_functions import load_dataset, load_model,adjacency_matrix_motion,adjacency_matrix_distance_motion,adjacency_matrix_distance_FACED,adjacency_matrix_FACED
+from SGCN_FACED_norm import ShallowSGCNNet
+import inspect
 CLASS_LABELS = ["Left Hand", "Right Hand", "Both Feet", "Tongue"]
+CLASS_LABELS_FACED = ["Low", "Med", "High"]
 
-def get_labels(model,dataloader):
+def model_requires_edge_index(model):
+    sig = inspect.signature(model.forward)
+    return 'edge_index' in sig.parameters
+
+def get_labels(model,dataloader,device):
+    model = model.to(device)
     model.eval()
-    data = enumerate(dataloader)
     all_preds = []
     all_truths = []
-    if isinstance(model, ShallowSGCNNet):
+    if (model.__class__.__name__ == "ShallowSGCNNet" and "SGCN_norm" in model.__class__.__module__):
         adj_m,pos = adjacency_matrix_motion()
-        adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=5)
+        adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=6)
         threshold = 0  # Adjust as needed
         source_nodes = []
         target_nodes = []
-
+        # Iterate over all elements in the distance matrix, including self-loops and duplicates
+        for i in range(dm.shape[0]):
+            for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
+                if dm[i, j] >= threshold:  # If the distance meets the condition
+                    source_nodes.append(i)  # Source node
+                    target_nodes.append(j)  # Target node
+        edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+    elif(model.__class__.__name__ == "ShallowSGCNNet" and "SGCN_FACED_norm" in model.__class__.__module__):
+        adj_m,pos = adjacency_matrix_FACED()
+        adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=6)
+        threshold = 0  # Adjust as needed
+        source_nodes = []
+        target_nodes = []
         # Iterate over all elements in the distance matrix, including self-loops and duplicates
         for i in range(dm.shape[0]):
             for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
@@ -33,9 +51,11 @@ def get_labels(model,dataloader):
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
     try:
-        for batch_idx, (X, y, _) in data:
-            if isinstance(model,ShallowSGCNNet):
-                preds = model(X,edge_index)
+        for batch_idx, (X, y, _) in enumerate(dataloader):
+            X = X.to(device)
+            y = y.to(device)
+            if model_requires_edge_index(model):
+                preds = model(X, edge_index)
             else:
                 preds = model(X)
             all_truths.append(y)
@@ -44,8 +64,10 @@ def get_labels(model,dataloader):
     except Exception as e:
         print(e)
         print("trying to 2 outputs only")
-        for batch_idx, (X, y) in data:
-            if isinstance(model,ShallowSGCNNet):
+        for batch_idx, (X, y) in enumerate(dataloader):
+            X = X.to(device)
+            y = y.to(device)
+            if model_requires_edge_index(model):
                 preds = model(X,edge_index)
             else:
                 preds = model(X)
@@ -54,8 +76,8 @@ def get_labels(model,dataloader):
             all_preds.append(pred_labels)  # Append the tensor (not a list)
 
     # Concatenate all the predictions into a single tensor
-    all_preds = torch.cat(all_preds, dim=0)  # Concatenate the list of tensors
-    all_truths = torch.cat(all_truths,dim=0)
+    all_preds = torch.cat(all_preds, dim=0).cpu()
+    all_truths = torch.cat(all_truths, dim=0).cpu()
     return all_preds,all_truths
 
 def compute_accuracy(pred,truth):
@@ -73,18 +95,20 @@ def compute_class_confusions(pred, truth):
     # Calculate percentages
     cm_percentage = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis] * 100  # Row-wise normalization to get percentages
 
-    # Define class labels (modify if needed)
-    class_labels = [f"Class {i}" for i in range(cm.shape[0])]
 
     # Create the annotations with both raw count and percentage
     annotations = [
         [f"{cm[i, j]} ({cm_percentage[i, j]:.2f}%)" for j in range(cm.shape[1])]
         for i in range(cm.shape[0])
     ]
+    if cm.shape[0] == 3:
+        labels = CLASS_LABELS_FACED
+    else:
+        labels = CLASS_LABELS
 
     # Plot confusion matrix using seaborn
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm_percentage, annot=annotations, fmt="", cmap="Blues", xticklabels=CLASS_LABELS, yticklabels=CLASS_LABELS)
+    sns.heatmap(cm_percentage, annot=annotations, fmt="", cmap="Blues", xticklabels=labels, yticklabels=labels)
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
     plt.title("Confusion Matrix (Raw Count and Percentage)")
@@ -98,7 +122,7 @@ def compute_model_confusion(model, X_test, y_true):
         preds = torch.argmax(outputs, dim=1).cpu().numpy()
     return confusion_matrix(y_true, preds)
 
-def plot_and_save_confusion_matrix(cm_avg, CLASS_LABELS, output_path, model_name):
+def plot_and_save_confusion_matrix(cm_avg, class_labels, output_path, model_name):
     """Plot and save averaged confusion matrix with colors based on percentage values."""
     
     # Compute percentage-based confusion matrix
@@ -111,8 +135,8 @@ def plot_and_save_confusion_matrix(cm_avg, CLASS_LABELS, output_path, model_name
 
     # Plot with color scaling from 0% to 100%
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm_percentage, annot=annotations, fmt="", cmap="Blues", xticklabels=CLASS_LABELS, 
-                yticklabels=CLASS_LABELS, vmin=0, vmax=100, linewidths=0.5, linecolor='gray')
+    sns.heatmap(cm_percentage, annot=annotations, fmt="", cmap="Blues", xticklabels=class_labels, 
+                yticklabels=class_labels, vmin=0, vmax=100, linewidths=0.5, linecolor='gray')
 
     # Labels and title
     plt.xlabel("Predicted Label")
@@ -124,11 +148,10 @@ def plot_and_save_confusion_matrix(cm_avg, CLASS_LABELS, output_path, model_name
     plt.close()
 
 
-def compute_all_model_confusion(models_path: str, output_path: str):
+def compute_all_model_confusion(dataloader,models_path: str, output_path: str):
     os.makedirs(output_path, exist_ok=True)
-    data_path = "../Datasets/"
-    X = load_dataset("test_set.pkl", data_path)
-    data_loader = DataLoader(X, batch_size=16)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    data_loader = dataloader
     
     models_cm_avg = {}  # Store average confusion matrices for all models
     
@@ -143,30 +166,37 @@ def compute_all_model_confusion(models_path: str, output_path: str):
         for model_file in os.listdir(arch_path):
             if not(model_file.endswith("state.pth")) and model_file.endswith(".pth"):  # Ensure only full model files are used
                 model = load_model(model_file, arch_path)  # Load full model
-                model_preds, truths = get_labels(model, dataloader=data_loader)
+                model_preds, truths = get_labels(model, dataloader=data_loader,device=device)
                 cm = confusion_matrix(truths, model_preds)  # Fix argument order
                 cm_list.append(cm)
                 model_count += 1
+                
+        
         
         if model_count > 0:
             cm_avg = np.floor(np.mean(cm_list, axis=0)).astype(int)
             #CLASS_LABELS = [f"Class {i}" for i in range(cm_avg.shape[0])]
-            save_classification_report(truths,model_preds,CLASS_LABELS,output_path,f"{model.__class__.__name__}_report.txt")
+            num_classes = cm_avg.shape[0]
+            if num_classes == 3:
+                class_labels = CLASS_LABELS_FACED
+            else:
+                class_labels = CLASS_LABELS
+            save_classification_report(truths,model_preds,class_labels,output_path,f"{model.__class__.__name__}_report.txt")
             
             # Store averaged confusion matrix for later comparison
             models_cm_avg[arch_folder] = cm_avg  
-            
+
             # Save individual confusion matrix
-            plot_and_save_confusion_matrix(cm_avg, CLASS_LABELS, output_path, arch_folder)
+            plot_and_save_confusion_matrix(cm_avg, class_labels, output_path, arch_folder)
     
     # Generate and save class-wise accuracy comparison plot
     if models_cm_avg:
-        plot_and_save_class_accuracy(models_cm_avg, CLASS_LABELS, output_path)
+        plot_and_save_class_accuracy(models_cm_avg, class_labels, output_path)
         plot_and_save_overall_accuracy(models_cm_avg,output_path)
-        plot_and_save_mislabeling_histograms(models_cm_avg,CLASS_LABELS,output_path)
-        plot_and_save_predicted_label_distributions(models_cm_avg,CLASS_LABELS,output_path)
-        plot_and_save_overall_prediction_distributions(models_cm_avg,CLASS_LABELS,output_path)
-        f1_scores = compute_f1_scores(models_cm_avg,CLASS_LABELS)
+        plot_and_save_mislabeling_histograms(models_cm_avg,class_labels,output_path)
+        plot_and_save_predicted_label_distributions(models_cm_avg,class_labels,output_path)
+        plot_and_save_overall_prediction_distributions(models_cm_avg,class_labels,output_path)
+        f1_scores = compute_f1_scores(models_cm_avg,class_labels)
         plot_and_save_f1_scores(f1_scores,output_path)
         save_epi_test(models_cm_avg,output_path)
             
@@ -344,7 +374,6 @@ def plot_and_save_f1_scores(f1_scores, output_path):
     - output_path (str): The path where the F1-score comparison plot will be saved.
     """
     # Convert f1_scores to a DataFrame for plotting
-    print(f1_scores)
     f1_df = pd.DataFrame(list(f1_scores.items()), columns=["Model", "F1-Score"])
     
     # Plot the F1-scores for each model
@@ -402,8 +431,12 @@ def save_epi_test(all_cms,output_path):
         return {"Class": target_class, "TP": TP, "FP": FP, "FN": FN, "TN": TN, "Chi2": chi2, "p-value": p}
     
     for model_name, cm_avg in all_cms.items():
-
-        results = [epi_tests_ova(cm_avg, cls, CLASS_LABELS) for cls in CLASS_LABELS]
+        num_classes = cm_avg.shape[0]
+        if num_classes == 3:
+            class_labels = CLASS_LABELS_FACED
+        else:
+            class_labels = CLASS_LABELS
+        results = [epi_tests_ova(cm_avg, cls, class_labels) for cls in class_labels]
         summary_table = pd.DataFrame(results)
         summary_table.iloc[:, 1:] = summary_table.iloc[:, 1:].apply(lambda x: np.round(x, 2))
         print("\nSummary Table of Metrics:")
