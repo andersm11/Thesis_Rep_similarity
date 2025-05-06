@@ -29,8 +29,8 @@ n_batches = 8
 #                             n_batches=n_batches)
 # compute_all_model_CKA(kernel_direc,"../cka_results")
 # plot_cka_heatmaps("../cka_results","../kernels")
-X = torch.load('../Datasets/FACED_dataset/emotion_test_set.pt')
-test_loader = DataLoader(X, batch_size=16)
-compose_heat_matrix("../cka_results","cka_heatmaps","../models",test_loader,"cka heatmap")
+# X = torch.load('../Datasets/emotion_test_set.pt')
+test_loader = DataLoader(layer_names, batch_size=16)
+compose_heat_matrix("../cka_results","cka_heatmaps","cka heatmap")
 
 

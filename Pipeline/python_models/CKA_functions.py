@@ -525,40 +525,34 @@ def compute_all_model_CKA_lowmem(root_dir: str, output_dir: str):
     
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    
-    # Configure logging
-    # log_file = os.path.join(output_dir, 'cka_computation.log')
-    # logging.basicConfig(filename=log_file, 
-    #                     level=logging.INFO,
-    #                     format='%(asctime)s - %(levelname)s - %(message)s')
-    
-    # logging.info("Starting CKA computation for models in %s", root_dir)
-    
-    # Get all folders in the root directory
+
     model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
 
     # Iterate over all unique pairs of model directories
     for model_dir1, model_dir2 in itertools.product(model_dirs, repeat=2):
         model1 = os.path.basename(model_dir1)
         model2 = os.path.basename(model_dir2)
+
+        # Construct the result filename and path
+        result_filename = f"{model1}_vs_{model2}.npy"
+        result_path = os.path.join(output_dir, result_filename)
+        
+        # Check if the result already exists
+        if os.path.exists(result_path):
+            print(f"CKA result between {model1} and {model2} already exists. Skipping computation.")
+            continue  # Skip this model pair
         
         #logging.info("Computing CKA between %s and %s", model1, model2)
-        
         print(f"Computing CKA between {model1} and {model2}...")
-        
+
         # Compute cross-model CKA
         cka_results = compute_cross_model_CKA_lowmem(model_dir1, model_dir2)  # Assumed function
         
         # Save results to a file in the output directory
-        result_filename = f"{model1}_vs_{model2}.npy"
-        result_path = os.path.join(output_dir, result_filename)
         np.save(result_path, cka_results)
-        
         logging.info("Saved CKA results to %s", result_path)
-        print(f"Saved results to {result_path}",flush=True)
-        #results = [future.result() for future in futures]
+        print(f"Saved results to {result_path}", flush=True)
 
-    
     logging.info("CKA computation completed.")
  
 
@@ -724,6 +718,118 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
 
     cka_results /= og_kernels_count
     return cka_results  # Return the CKA similarity matrix
+
+
+def compute_all_model_CKA_lowmem_samelabel(root_dir: str, output_dir: str):
+    """
+    Computes CKA between models in different folders under the root directory.
+    Each folder represents a model architecture and contains .pth files (kernels).
+    
+    The function iterates through each pair of folders, computes CKA, and saves the results in the output directory.
+    If the output directory does not exist, it is created.
+    """
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
+
+    # Iterate over all unique pairs of model directories
+    for model_dir1, model_dir2 in itertools.product(model_dirs, repeat=2):
+        model1 = os.path.basename(model_dir1)
+        model2 = os.path.basename(model_dir2)
+
+        # Construct the result filename and path
+        result_filename = f"{model1}_vs_{model2}.npy"
+        result_path = os.path.join(output_dir, result_filename)
+        
+        # Check if the result already exists
+        if os.path.exists(result_path):
+            print(f"CKA result between {model1} and {model2} already exists. Skipping computation.")
+            continue  # Skip this model pair
+        
+        #logging.info("Computing CKA between %s and %s", model1, model2)
+        print(f"Computing CKA between {model1} and {model2}...")
+
+        # Compute cross-model CKA
+        cka_results = compute_cross_model_CKA_lowmem(model_dir1, model_dir2)  # Assumed function
+        
+        # Save results to a file in the output directory
+        np.save(result_path, cka_results)
+        logging.info("Saved CKA results to %s", result_path)
+        print(f"Saved results to {result_path}", flush=True)
+
+    logging.info("CKA computation completed.")
+
+def compute_cross_model_CKA_lowmem_samelabel(model_dir1: str, model_dir2: str, preds_model1, preds_model2, test_loader, device="cuda"):
+    """
+    Computes the CKA between two models' kernels, but only for the samples where both models predicted the same class.
+    
+    Args:
+    - model_dir1: The directory of the first model's kernels.
+    - model_dir2: The directory of the second model's kernels.
+    - preds_model1: Predictions from the first model (shape: [num_samples]).
+    - preds_model2: Predictions from the second model (shape: [num_samples]).
+    - test_loader: DataLoader containing the input data for both models.
+    - device: Device to load the models and perform computation (default is "cuda").
+    
+    Returns:
+    - CKA results between the two models for matching predictions.
+    """
+    print("Found device:", device)
+    
+    # Load the kernels from the directories
+    model_name1 = os.path.basename(model_dir1)
+    model_name2 = os.path.basename(model_dir2)
+    
+    # Load kernel files for model 1
+    model1_kernels = load_kernels_from_directory(model_dir1, device)
+    # Load kernel files for model 2
+    model2_kernels = load_kernels_from_directory(model_dir2, device)
+
+    # Identify matching predictions where both models predicted the same class
+    matching_preds_mask = (preds_model1 == preds_model2)
+
+    if matching_preds_mask.sum().item() == 0:
+        print("No samples where both models predicted the same class.")
+        return None  # Early return if no matching predictions
+
+    # Filter kernels to only include samples with matching predictions
+    model1_kernels_filtered = {layer: kernel[matching_preds_mask] for layer, kernel in model1_kernels.items()}
+    model2_kernels_filtered = {layer: kernel[matching_preds_mask] for layer, kernel in model2_kernels.items()}
+
+    # Compute the CKA between the matching kernels for both models
+    cka_results = np.zeros((len(model1_kernels_filtered), len(model2_kernels_filtered)))
+
+    layer1_to_idx = {layer: idx for idx, layer in enumerate(model1_kernels_filtered.keys())}
+    layer2_to_idx = {layer: idx for idx, layer in enumerate(model2_kernels_filtered.keys())}
+
+    panda_data = []
+
+    for layer1, K_x in model1_kernels_filtered.items():
+        for layer2, K_y in model2_kernels_filtered.items():
+            # Move kernels to the device
+            K_x, K_y = K_x.to(device), K_y.to(device)
+
+            cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
+            idx1 = layer1_to_idx[layer1]
+            idx2 = layer2_to_idx[layer2]
+            panda_data.append((layer1, layer2, cka_value))
+
+            cka_results[idx1, idx2] = cka_value
+            print(f"CKA({model_name1}.{layer1}, {model_name2}.{layer2}): {cka_value}", flush=True)
+
+    # Compute average CKA across all layers
+    cka_results = cka_results / len(model1_kernels_filtered)
+
+    # Save results as a CSV for further analysis
+    df = pd.DataFrame([(cka_value[0], cka_value[1], cka_value[2]) for cka_value in panda_data],
+                      columns=['Layer1', 'Layer2', 'CKA_Value'])
+
+    output_csv = f"cka_csv/CKA_{model_name1}_vs_{model_name2}.csv"
+    df.to_csv(output_csv, sep="\t", index=False, header=True)
+
+    return cka_results
 
 def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str],title1:str, title2:str):
     n_layers1 = len(layer_names_model1)
@@ -965,7 +1071,7 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
     print(f"Heatmap saved to {filepath}")
 
 
-def compose_heat_matrix(result_folder: str, output_folder: str, model_path: str, data_loader, title: str = "cka heatmap"):
+def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: str, data_loader, title: str = "cka heatmap"):
     """
     Compose CKA heatmap and show average model accuracies.
 
