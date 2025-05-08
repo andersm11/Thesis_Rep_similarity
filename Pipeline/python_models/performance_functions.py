@@ -37,6 +37,7 @@ def get_labels(model,dataloader,device):
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+        edge_index = edge_index.to(device)
     elif(model.__class__.__name__ == "ShallowSGCNNet" and "SGCN_FACED_norm" in model.__class__.__module__):
         adj_m,pos = adjacency_matrix_FACED()
         adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=6)
@@ -50,6 +51,7 @@ def get_labels(model,dataloader,device):
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+        edge_index = edge_index.to(device)
     try:
         for batch_idx, (X, y, _) in enumerate(dataloader):
             X = X.to(device)
