@@ -214,7 +214,13 @@ def plot_and_save_class_accuracy(models_cm_avg, class_labels, output_path):
     
     # Plot histogram
     plt.figure(figsize=(10, 6))
-    sns.barplot(x="Class", y="Accuracy", hue="Model", data=df)
+    ax = sns.barplot(x="Class", y="Accuracy", hue="Model", data=df)
+    for p in ax.patches:
+        height = p.get_height()
+        ax.annotate(f"{height:.2f}", 
+                    (p.get_x() + p.get_width() / 2., height), 
+                    ha='center', va='bottom', 
+                    fontsize=12, fontweight='bold', color='black')
     
     # Labels and title
     plt.xlabel("Class Label")
@@ -287,8 +293,14 @@ def plot_and_save_mislabeling_histograms(models_cm_avg, class_labels, output_pat
 
         # Plot the barplot of mislabeling for this class
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=mislabel_df, x="Misclassified As", y="Count", hue="Model", 
+        ax = sns.barplot(data=mislabel_df, x="Misclassified As", y="Count", hue="Model", 
                     errorbar=None)
+        for p in ax.patches:
+            height = p.get_height()
+            ax.annotate(f"{height:.2f}", 
+                        (p.get_x() + p.get_width() / 2., height), 
+                        ha='center', va='bottom', 
+                        fontsize=12, fontweight='bold', color='black')
 
         # Labels and title
         plt.xlabel("Misclassified As")
@@ -323,8 +335,14 @@ def plot_and_save_predicted_label_distributions(models_cm_avg, class_labels, out
 
         # Plot the histogram of predicted label distributions for this class
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=predicted_df, x="Predicted As", y="Count", hue="Model", 
+        ax = sns.barplot(data=predicted_df, x="Predicted As", y="Count", hue="Model", 
                     errorbar=None)
+        for p in ax.patches:
+            height = p.get_height()
+            ax.annotate(f"{height:.2f}", 
+                        (p.get_x() + p.get_width() / 2., height), 
+                        ha='center', va='bottom', 
+                        fontsize=12, fontweight='bold', color='black')
         
         # Labels and title
         plt.xlabel("Predicted Label")
@@ -465,8 +483,13 @@ def plot_and_save_overall_prediction_distributions(models_cm_avg, class_labels, 
     
     # Plot the histogram of overall predicted label distributions
     plt.figure(figsize=(10, 6))
-    sns.barplot(data=overall_df, x="Predicted Label", y="Count", hue="Model", errorbar=None)
-    
+    ax = sns.barplot(data=overall_df, x="Predicted Label", y="Count", hue="Model", errorbar=None)
+    for p in ax.patches:
+        height = p.get_height()
+        ax.annotate(f"{height:.2f}", 
+                    (p.get_x() + p.get_width() / 2., height), 
+                    ha='center', va='bottom', 
+                    fontsize=12, fontweight='bold', color='black')
     # Labels and title
     plt.xlabel("Predicted Label")
     plt.ylabel("Count")
