@@ -1164,6 +1164,7 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
 
 def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folder: str, title: str = "cka heatmap"):
     os.makedirs(output_folder, exist_ok=True)
+
     model_name_map = {
         "ShallowFBCSPNet": "Shallow",
         "ShallowRNNNet": "RNN",
@@ -1180,15 +1181,20 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         "ShallowSGCNNet": 0
     }
 
-    #Shallow: 3611, RNN: 3715, LSTM: 3781
-    
+    # Read CKA results
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
 
     model_names = sorted(set(
         name.split("_vs_")[0] for name in cka_files
     ).union(
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
-    ))  
+    ))
+
+    # Reorder so ShallowFBCSPNet is first
+    def reorder(models):
+        return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
+
+    model_names = reorder(model_names)
 
     num_models = len(model_names)
     cka_matrix = np.zeros((num_models, num_models))
@@ -1197,6 +1203,8 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     for file in cka_files:
         model1, model2 = file.replace(".npy", "").split("_vs_")
         cka_value = np.load(os.path.join(result_folder, file))[0, 0]
+        if model1 not in model_names or model2 not in model_names:
+            continue
         i, j = model_names.index(model1), model_names.index(model2)
         cka_matrix[i, j] = cka_value
         cka_matrix[j, i] = cka_value  # symmetry
@@ -1205,7 +1213,7 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         model1_csv = model_name_map.get(model1, model1)
         model2_csv = model_name_map.get(model2, model2)
 
-        # Build possible CSV filenames
+        # Check shared keys file
         keyfile1 = os.path.join(csv_folder, f"Shared_Keys_{model1_csv}_and_{model2_csv}.csv")
         keyfile2 = os.path.join(csv_folder, f"Shared_Keys_{model2_csv}_and_{model1_csv}.csv")
         keyfile = keyfile1 if os.path.exists(keyfile1) else keyfile2 if os.path.exists(keyfile2) else None
@@ -1218,13 +1226,14 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
             num_keys = 0
         if model1 == model2:
             num_keys = model_unanimous_map.get(model1, 0)
+
         print(f"num keys: {num_keys}, for models: {model1} and {model2}")
 
         annotation_text = f"{cka_value:.2f}\n(n={num_keys})"
         annotation_matrix[i][j] = annotation_text
         annotation_matrix[j][i] = annotation_text
 
-    # Flip for lower-left diagonal alignment
+    # Flip vertically for proper heatmap orientation
     cka_matrix = np.flipud(cka_matrix)
     annotation_matrix = list(reversed(annotation_matrix))
     model_names_reversed = list(reversed(model_names))
@@ -1232,6 +1241,7 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
     annot_df = pd.DataFrame(annotation_matrix, index=model_names_reversed, columns=model_names)
 
+    # Plot
     plt.figure(figsize=(10, 8))
     sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
                 linewidths=0.5, cbar=True, vmin=0, vmax=1)
@@ -1243,10 +1253,10 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
     plt.close()
 
-    print(f"Heatmap saved to {filepath}")
+    print(f"✅ Heatmap saved to {filepath}")
 
 
-def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: str, data_loader, title: str = "cka heatmap"):
+def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: str, title: str = "cka heatmap"):
     """
     Compose CKA heatmap and show average model accuracies.
 
@@ -1254,72 +1264,104 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         result_folder (str): Folder containing CKA .npy result files.
         output_folder (str): Folder to save the generated heatmap.
         model_path (str): Path where model folders are stored.
-        data_loader: DataLoader used for evaluating the models.
         title (str): Title of the heatmap.
     """
     os.makedirs(output_folder, exist_ok=True)
-    
+
     # Read all .npy files
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
-    
+
     # Get unique model names
     model_names = sorted(set(
         name.split("_vs_")[0] for name in cka_files
     ).union(
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
     ))
-    from performance_functions import get_labels, compute_accuracy
-
 
     # --- Compute average accuracies ---
     model_accuracies = {}
     for model_name in model_names:
         model_folder = os.path.join(model_path, model_name)
         model_files = [f for f in os.listdir(model_folder) if f.endswith(".pth") and 'state' not in f.lower()]
-        
         accuracies = []
+
         for model_file in model_files:
             parts = model_file.replace(".pth", "").split("_")
-            acc = parts[1]
-            accuracies.append(float(acc))
-        
-        avg_acc = np.mean(accuracies)  # Convert to percentage
+            try:
+                acc = float(parts[1])
+                accuracies.append(acc)
+            except:
+                print(f"Warning: could not parse accuracy from {model_file}")
+
+        avg_acc = np.mean(accuracies) if accuracies else 0.0
         model_accuracies[model_name] = avg_acc
         print(f"Model {model_name}: Average Accuracy = {avg_acc:.2f}%")
 
-    # Create updated model names with accuracies
-    model_names_with_acc = [f"{name} ({model_accuracies[name]:.2f}%)" for name in model_names]
-
-    # --- Construct CKA matrix ---
-    num_models = len(model_names)
-    cka_matrix = np.zeros((num_models, num_models))
+    # Reorder so ShallowFBCSPNet is first
+    def reorder(models):
+        return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
     
+    model_names = reorder(model_names)
+    model_accuracies = {k: model_accuracies[k] for k in model_names}
+
+    # Construct annotated matrix
+    num_models = len(model_names)
+    matrix_vals = np.zeros((num_models, num_models))
+    annotations = [["" for _ in range(num_models)] for _ in range(num_models)]
+
     for file in cka_files:
         model1, model2 = file.replace(".npy", "").split("_vs_")
-        cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Scalar
-        
+        if model1 not in model_names or model2 not in model_names:
+            continue
+
         i, j = model_names.index(model1), model_names.index(model2)
-        cka_matrix[i, j] = cka_value
-        cka_matrix[j, i] = cka_value  # Symmetric
+        cka_value = np.load(os.path.join(result_folder, file))[0, 0]
 
-    # Flip matrix
-    cka_matrix = np.flipud(cka_matrix)
-    model_names_with_acc_reversed = list(reversed(model_names_with_acc))
+        matrix_vals[i][j] = cka_value
+        matrix_vals[j][i] = cka_value
 
-    # --- Plot heatmap ---
-    df = pd.DataFrame(cka_matrix, index=model_names_with_acc_reversed, columns=model_names_with_acc)
+        acc1 = model_accuracies[model1]
+        acc2 = model_accuracies[model2]
 
-    plt.figure(figsize=(12, 10))
-    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
-    plt.title(title)
-    plt.xlabel('Model (Avg Accuracy)')
-    plt.ylabel('Model (Avg Accuracy)')
-    
+        annotation = f"{cka_value:.2f}\n({acc1:.0f}% vs {acc2:.0f}%)"
+        annotations[i][j] = annotation
+        annotations[j][i] = f"{cka_value:.2f}\n({acc2:.0f}% vs {acc1:.0f}%)"
+
+    # Flip matrix vertically
+    matrix_vals = np.flipud(matrix_vals)
+    annotations = annotations[::-1]
+
+    y_labels = list(reversed([f"{name} ({model_accuracies[name]:.2f}%)" for name in model_names]))
+    x_labels = [f"{name} ({model_accuracies[name]:.2f}%)" for name in model_names]
+
+    # Plot
+    plt.figure(figsize=(13, 11))
+    sns.heatmap(
+        matrix_vals,
+        annot=annotations,
+        fmt='',
+        cmap='gist_heat',
+        square=True,
+        xticklabels=x_labels,
+        yticklabels=y_labels,
+        linewidths=0.5,
+        cbar=True,
+        vmin=0,
+        vmax=1,
+        annot_kws={"size": 14}  # Increase heatmap cell text size
+    )
+
+    plt.title(title, fontsize=16)
+    plt.xlabel('Model (Avg Accuracy)', fontsize=14)
+    plt.ylabel('Model (Avg Accuracy)', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
     plt.close()
-    
-    print(f"Heatmap saved to {filepath}")
+
+    print(f"✅ Heatmap saved to {filepath}")
     
     
 def adjacency_matrix_motion():
