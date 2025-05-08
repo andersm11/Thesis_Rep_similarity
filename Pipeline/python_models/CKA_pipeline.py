@@ -1,6 +1,6 @@
 from CKA_functions import compute_all_model_kernels,compute_all_model_CKA,load_model_metadata,plot_cka_heatmaps
 from CKA_functions import load_dataset,fix_dataset_shape,compute_cross_model_cka,display_cka_matrix,compute_multi_model_kernels,display_differences_matrix_og
-from CKA_functions import compose_heat_matrix
+from CKA_functions import compose_heat_matrix,compose_heat_matrix_shared
 from torch.utils.data import DataLoader
 from performance_functions import get_labels, compute_accuracy
 import numpy as np
@@ -31,6 +31,6 @@ n_batches = 8
 # plot_cka_heatmaps("../cka_results","../kernels")
 # X = torch.load('../Datasets/emotion_test_set.pt')
 test_loader = DataLoader(layer_names, batch_size=16)
-compose_heat_matrix("../cka_results","cka_heatmaps","cka heatmap")
+compose_heat_matrix_shared("../cka_results","cka_heatmaps","../Shared_Keys","cka heatmap_shared_fc_temporal")
 
 

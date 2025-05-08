@@ -1,4 +1,2 @@
 performance of models
-CKA for all models
-CKA for .fc
-CKA on specific features
+add performance on CKA heatmaps
