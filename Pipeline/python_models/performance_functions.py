@@ -37,6 +37,7 @@ def get_labels(model,dataloader,device):
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+        edge_index = edge_index.to(device)
     elif(model.__class__.__name__ == "ShallowSGCNNet" and "SGCN_FACED_norm" in model.__class__.__module__):
         adj_m,pos = adjacency_matrix_FACED()
         adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=6)
@@ -50,6 +51,7 @@ def get_labels(model,dataloader,device):
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
+        edge_index = edge_index.to(device)
     try:
         for batch_idx, (X, y, _) in enumerate(dataloader):
             X = X.to(device)
@@ -214,7 +216,13 @@ def plot_and_save_class_accuracy(models_cm_avg, class_labels, output_path):
     
     # Plot histogram
     plt.figure(figsize=(10, 6))
-    sns.barplot(x="Class", y="Accuracy", hue="Model", data=df)
+    ax = sns.barplot(x="Class", y="Accuracy", hue="Model", data=df)
+    for p in ax.patches:
+        height = p.get_height()
+        ax.annotate(f"{height:.2f}", 
+                    (p.get_x() + p.get_width() / 2., height), 
+                    ha='center', va='bottom', 
+                    fontsize=12, fontweight='bold', color='black')
     
     # Labels and title
     plt.xlabel("Class Label")
@@ -287,8 +295,14 @@ def plot_and_save_mislabeling_histograms(models_cm_avg, class_labels, output_pat
 
         # Plot the barplot of mislabeling for this class
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=mislabel_df, x="Misclassified As", y="Count", hue="Model", 
+        ax = sns.barplot(data=mislabel_df, x="Misclassified As", y="Count", hue="Model", 
                     errorbar=None)
+        for p in ax.patches:
+            height = p.get_height()
+            ax.annotate(f"{height:.2f}", 
+                        (p.get_x() + p.get_width() / 2., height), 
+                        ha='center', va='bottom', 
+                        fontsize=12, fontweight='bold', color='black')
 
         # Labels and title
         plt.xlabel("Misclassified As")
@@ -323,8 +337,14 @@ def plot_and_save_predicted_label_distributions(models_cm_avg, class_labels, out
 
         # Plot the histogram of predicted label distributions for this class
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=predicted_df, x="Predicted As", y="Count", hue="Model", 
+        ax = sns.barplot(data=predicted_df, x="Predicted As", y="Count", hue="Model", 
                     errorbar=None)
+        for p in ax.patches:
+            height = p.get_height()
+            ax.annotate(f"{height:.2f}", 
+                        (p.get_x() + p.get_width() / 2., height), 
+                        ha='center', va='bottom', 
+                        fontsize=12, fontweight='bold', color='black')
         
         # Labels and title
         plt.xlabel("Predicted Label")
@@ -465,8 +485,13 @@ def plot_and_save_overall_prediction_distributions(models_cm_avg, class_labels, 
     
     # Plot the histogram of overall predicted label distributions
     plt.figure(figsize=(10, 6))
-    sns.barplot(data=overall_df, x="Predicted Label", y="Count", hue="Model", errorbar=None)
-    
+    ax = sns.barplot(data=overall_df, x="Predicted Label", y="Count", hue="Model", errorbar=None)
+    for p in ax.patches:
+        height = p.get_height()
+        ax.annotate(f"{height:.2f}", 
+                    (p.get_x() + p.get_width() / 2., height), 
+                    ha='center', va='bottom', 
+                    fontsize=12, fontweight='bold', color='black')
     # Labels and title
     plt.xlabel("Predicted Label")
     plt.ylabel("Count")
