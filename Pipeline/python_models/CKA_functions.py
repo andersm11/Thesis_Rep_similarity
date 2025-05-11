@@ -1169,16 +1169,16 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         "ShallowFBCSPNet": "Shallow",
         "ShallowRNNNet": "RNN",
         "ShallowLSTM": "LSTM",
-        "ShallowAttNet": "Attention",
+        "ShallowAttentionNet": "Attention",
         "ShallowSGCNNet": "SGCN"
     }
 
     model_unanimous_map = {
-        "ShallowFBCSPNet": 3611,
-        "ShallowRNNNet": 3715,
-        "ShallowLSTM": 3781,
-        "ShallowAttNet": 0,
-        "ShallowSGCNNet": 0
+        "ShallowFBCSPNet": 10726,
+        "ShallowRNNNet": 4832,
+        "ShallowLSTM": 2238,
+        "ShallowAttentionNet": 9384,
+        "ShallowSGCNNet": 5287
     }
 
     # Read CKA results
@@ -1224,6 +1224,11 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
             num_keys = len(shared_lines) - 1 if "idx" in shared_lines[0].lower() else len(shared_lines)
         else:
             num_keys = 0
+            # print("keyfile not found or not a file:", keyfile)
+            # print("keyfile1:" ,keyfile1)
+            # print("keyfile2:" ,keyfile2)
+            # print("model1.csv:", model1_csv)
+            # print("model2.csv:", model2_csv)
         if model1 == model2:
             num_keys = model_unanimous_map.get(model1, 0)
 
@@ -1244,10 +1249,12 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     # Plot
     plt.figure(figsize=(10, 8))
     sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
-                linewidths=0.5, cbar=True, vmin=0, vmax=1)
+                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 12} )
     plt.title(title)
     plt.xlabel('Model')
     plt.ylabel('Model')
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")

@@ -34,9 +34,6 @@ class ShallowFBCSPNet(nn.Module):
     def _get_flattened_size(self, x):
         with torch.no_grad():
             x = self.temporal(x)
-            x = F.elu(x)
-            #x = self.tpool(x)
-            #x = self.dropout(x)
             x = self.spatial(x)
             x = F.elu(x)
             x = self.batch_norm(x)
@@ -48,9 +45,6 @@ class ShallowFBCSPNet(nn.Module):
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
-        x = F.elu(x)
-        #x = self.tpool(x)
-        x = self.dropout(x)
         x = self.spatial(x)
         x = F.elu(x)
         x = self.batch_norm(x)
