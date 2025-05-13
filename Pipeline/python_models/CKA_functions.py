@@ -275,7 +275,7 @@ def extract_model_activations_indexed(
                     source_nodes.append(i)
                     target_nodes.append(j)
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
-    elif isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN_FACED':
+    elif isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN_FACED_norm':
         adj_m, pos = adjacency_matrix_FACED()
         adj_dis_m, dm = adjacency_matrix_distance_FACED(pos, delta=5)
         threshold = 0
@@ -586,6 +586,71 @@ def compute_all_model_kernels_indexed(
     for direc in model_directories:
         if direc not in target_folders:
             continue  # skip unrelated models
+
+        model_path = os.path.join(target_directory, direc)
+        print("Processing model:", model_path)
+        layer_list, model_list = compute_multi_model_kernels_indexed(model_path, **kwargs)
+
+        if not model_list:
+            continue  # skip if model failed
+
+        model_name = model_list[0]
+        kernel_specific_path = os.path.join(kernels_directory, model_name)
+        os.makedirs(kernel_specific_path, exist_ok=True)
+
+        with open(os.path.join(kernel_specific_path, f"{direc}_list1.json"), "w") as f_layer:
+            json.dump(layer_list, f_layer, indent=4)
+        with open(os.path.join(kernel_specific_path, f"{direc}_list2.json"), "w") as f_model:
+            json.dump(model_list, f_model, indent=4)
+
+
+def compute_all_model_kernels_indexed_all(
+    target_directory: str,
+    activations_root_directory: str,
+    kernels_directory: str,
+    input_data: torch.Tensor,
+    layer_names: list[str],
+    use_state: bool = False,
+    batch_size: int = 128,
+    n_batches: int = 1,
+    device: Optional[torch.device] = 'cpu',
+    keyfile_path: str = 'Shared_Keys_Shallow_and_RNN.csv'
+):
+    # Map human-readable model names to folder names
+    model_name_map = {
+        "Attention": "ShallowAtt",
+        "Shallow": "ShallowFBCSP",
+        "LSTM": "ShallowLSTM",
+        "RNN": "ShallowRNN",
+        "SGCN": "ShallowSGCN"
+    }
+
+    # # Parse keyfile to get model pair
+    # try:
+    #     basename = os.path.basename(keyfile_path)
+    #     model1_str, model2_str = basename.replace("Shared_Keys_", "").replace(".csv", "").split("_and_")
+    #     target_folders = {model_name_map[model1_str], model_name_map[model2_str]}
+    # except Exception as e:
+    #     raise ValueError(f"Failed to parse model names from keyfile `{keyfile_path}`: {e}")
+
+    # Prepare common kwargs
+    kwargs = {
+        "activations_root_directory": activations_root_directory,
+        "kernels_directory": kernels_directory,
+        "input_data": input_data,
+        "layer_names": layer_names,
+        "use_state": use_state,
+        "batch_size": batch_size,
+        "n_batches": n_batches,
+        "device": device,
+        "keyfile_path": keyfile_path
+    }
+
+    # Only process directories matching the two target models
+    model_directories = os.listdir(target_directory)
+    for direc in model_directories:
+        # if direc not in target_folders:
+        #     continue  # skip unrelated models
 
         model_path = os.path.join(target_directory, direc)
         print("Processing model:", model_path)
@@ -1203,6 +1268,8 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     for file in cka_files:
         model1, model2 = file.replace(".npy", "").split("_vs_")
         cka_value = np.load(os.path.join(result_folder, file))[0, 0]
+        print("file:",file)
+        print("model1:",model1, "model2:",model2, "cka value:",cka_value)
         if model1 not in model_names or model2 not in model_names:
             continue
         i, j = model_names.index(model1), model_names.index(model2)
@@ -1216,6 +1283,105 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         # Check shared keys file
         keyfile1 = os.path.join(csv_folder, f"Shared_Keys_{model1_csv}_and_{model2_csv}.csv")
         keyfile2 = os.path.join(csv_folder, f"Shared_Keys_{model2_csv}_and_{model1_csv}.csv")
+        keyfile = keyfile1 if os.path.exists(keyfile1) else keyfile2 if os.path.exists(keyfile2) else None
+
+        if keyfile and os.path.isfile(keyfile):
+            with open(keyfile, "r") as f:
+                shared_lines = f.readlines()
+            num_keys = len(shared_lines) - 1 if "idx" in shared_lines[0].lower() else len(shared_lines)
+        else:
+            num_keys = 0
+            # print("keyfile not found or not a file:", keyfile)
+            # print("keyfile1:" ,keyfile1)
+            # print("keyfile2:" ,keyfile2)
+            # print("model1.csv:", model1_csv)
+            # print("model2.csv:", model2_csv)
+        if model1 == model2:
+            num_keys = model_unanimous_map.get(model1, 0)
+
+        print(f"num keys: {num_keys}, for models: {model1} and {model2}")
+
+        annotation_text = f"{cka_value:.2f}\n(n={num_keys})"
+        annotation_matrix[i][j] = annotation_text
+        annotation_matrix[j][i] = annotation_text
+
+    # Flip vertically for proper heatmap orientation
+    cka_matrix = np.flipud(cka_matrix)
+    annotation_matrix = list(reversed(annotation_matrix))
+    model_names_reversed = list(reversed(model_names))
+
+    df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
+    annot_df = pd.DataFrame(annotation_matrix, index=model_names_reversed, columns=model_names)
+
+    # Plot
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
+                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 12} )
+    plt.title(title)
+    plt.xlabel('Model')
+    plt.ylabel('Model')
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+
+    filepath = os.path.join(output_folder, f"{title}.png")
+    plt.savefig(filepath, dpi=300, bbox_inches="tight")
+    plt.close()
+
+    print(f"✅ Heatmap saved to {filepath}")
+
+def compose_heat_matrix_shared_full(result_folder: str, output_folder: str, csv_folder: str, title: str = "cka heatmap"):
+    os.makedirs(output_folder, exist_ok=True)
+
+    model_name_map = {
+        "ShallowFBCSPNet": "Shallow",
+        "ShallowRNNNet": "RNN",
+        "ShallowLSTM": "LSTM",
+        "ShallowAttentionNet": "Attention",
+        "ShallowSGCNNet": "SGCN"
+    }
+
+    model_unanimous_map = {
+        "ShallowFBCSPNet": 4375,
+        "ShallowRNNNet": 4375,
+        "ShallowLSTM": 4375,
+        "ShallowAttentionNet": 4375,
+        "ShallowSGCNNet": 4375
+    }
+
+    # Read CKA results
+    cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
+
+    model_names = sorted(set(
+        name.split("_vs_")[0] for name in cka_files
+    ).union(
+        name.split("_vs_")[1].replace(".npy", "") for name in cka_files
+    ))
+
+    # Reorder so ShallowFBCSPNet is first
+    def reorder(models):
+        return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
+
+    model_names = reorder(model_names)
+
+    num_models = len(model_names)
+    cka_matrix = np.zeros((num_models, num_models))
+    annotation_matrix = [["" for _ in range(num_models)] for _ in range(num_models)]
+
+    for file in cka_files:
+        model1, model2 = file.replace(".npy", "").split("_vs_")
+        cka_value = np.load(os.path.join(result_folder, file))[0, 0]
+        if model1 not in model_names or model2 not in model_names:
+            continue
+        i, j = model_names.index(model1), model_names.index(model2)
+        cka_matrix[i, j] = cka_value
+        cka_matrix[j, i] = cka_value  # symmetry
+
+        # Map full model names to short CSV names
+        model1_csv = model_name_map.get(model1, model1)
+        model2_csv = model_name_map.get(model2, model2)
+
+        # Check shared keys file
+        keyfile1 = os.path.join(csv_folder, f"Shared_Keys_Spatial.csv")
         keyfile = keyfile1 if os.path.exists(keyfile1) else keyfile2 if os.path.exists(keyfile2) else None
 
         if keyfile and os.path.isfile(keyfile):
