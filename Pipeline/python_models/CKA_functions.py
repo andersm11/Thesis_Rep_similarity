@@ -165,7 +165,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
 
     model.eval()
     try:
-        from SGCN_FACED import ShallowSGCNNet
+        from SGCN_FACED_norm import ShallowSGCNNet
     except ImportError as e1:
         try:
             from SGCN import ShallowSGCNNet
@@ -187,7 +187,7 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
                     source_nodes.append(i)  # Source node
                     target_nodes.append(j)  # Target node
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
-    elif isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN_FACED':
+    elif isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN_FACED_norm':
         adj_m,pos = adjacency_matrix_FACED()
         adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=5)
         threshold = 0  # Adjust as needed
@@ -204,7 +204,6 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
         for i in range(0, input_tensor.shape[0], batch_size):
             batch = input_tensor[i:i + batch_size]  # Select current batch
             if isinstance(model,ShallowSGCNNet):
-                
                 _ = model(batch,edge_index.to(device))
             else:
                 _ = model(batch)  # Forward pass through the model
@@ -420,15 +419,16 @@ def compute_multi_model_kernels(
     total_nr_batches = math.ceil(total_samples / batch_size)
     final_layer_names=[]
     final_model_names=[]
-    #use_cuda = torch.cuda.is_available()
-    #device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
     for model_file in model_files:
-        if not model_file.endswith('state.pth'):
+        if not model_file.endswith('state.pth') and not model_file.startswith('.'):
+            print("Model file:", model_file)
             model_name, loss, seed = model_file.rsplit('_', 2)
-            model = load_model(model_file, models_directory)
+            model = load_model(model_file, models_directory,load_state=False)
             model.to(device)
             model.eval()
-            
+            input_data = input_data.to(device)
+            print(f"Input data is on device: {input_data.device}")
+            print(f"model is on device: {next(model.parameters()).device}")
             activation_dir = os.path.join(activations_root_directory, model_name, f"{loss}_{seed}")
             try:
                 found_names = extract_model_activations(model, input_data, activation_dir, layer_names, batch_size=batch_size,device=device)
@@ -476,8 +476,9 @@ def compute_multi_model_kernels_indexed(
     #device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
     for model_file in model_files:
         if not model_file.endswith('state.pth'):
+            print("splitting model file:", model_file)
             model_name, loss, seed = model_file.rsplit('_', 2)
-            model = load_model(model_file, models_directory)
+            model = load_model(model_file, models_directory,load_state=False)
             model.to(device)
             model.eval()
             
