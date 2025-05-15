@@ -108,7 +108,6 @@ class ShallowAttentionNet(nn.Module):
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
-        x = F.elu(x)
         x = self.spatial_att(x)
         x = F.elu(x)
         x = self.batch_norm(x)
