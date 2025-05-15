@@ -19,7 +19,7 @@ layer_name_lookup = {
 
 # List all .npy files in the directory
 npy_files = [f for f in os.listdir(npy_dir) if f.endswith('.npy')]
-
+print(f"Found {len(npy_files)} .npy files in {npy_dir}.")
 # Load and display the contents of each .npy file
 for npy_file in npy_files:
     # Parse model names from filename

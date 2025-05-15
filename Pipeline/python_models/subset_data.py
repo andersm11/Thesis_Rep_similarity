@@ -6,6 +6,8 @@ X = torch.load('../Datasets/FACED_dataset/emotion_test_set.pt')
 
 # Load indices from CSV and convert to int
 spatial_indices = pd.read_csv("../Shared_Keys/Shared_Keys_Spatial.csv",skiprows=1, header=None)[0].astype(int).tolist()
+
+print("Spatial Indices:", spatial_indices)
 temporal_indices = pd.read_csv("../Shared_Keys/Shared_Keys_Temporal.csv",skiprows=1, header=None)[0].astype(int).tolist()
 
 # Create subsets
@@ -24,4 +26,4 @@ print("\n" + "=" * 80 + "\n")
 print("First 20 Samples from Temporal Subset:")
 for i in range(min(20, len(temporal_subset))):
     sample = temporal_subset[i]
-    print(f"[{i}] Original Index {temporal_indices[i]}: {sample}")
+    #print(f"[{i}] Original Index {temporal_indices[i]}: {sample}")
