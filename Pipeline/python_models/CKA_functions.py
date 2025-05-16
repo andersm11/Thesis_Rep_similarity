@@ -1442,6 +1442,14 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     """
     os.makedirs(output_folder, exist_ok=True)
 
+    model_name_map = {
+        "ShallowFBCSPNet": "ShallowFBCSP",
+        "ShallowRNNNet": "ShallowRNN",
+        "ShallowLSTM": "ShallowLSTM",
+        "ShallowAttentionNet": "ShallowAtt",
+        "ShallowSGCNNet": "ShallowSGCN"
+    }
+
     # Read all .npy files
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
 
@@ -1455,7 +1463,8 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     # --- Compute average accuracies ---
     model_accuracies = {}
     for model_name in model_names:
-        model_folder = os.path.join(model_path, model_name)
+        model_name_folder = model_name_map.get(model_name, model_name) 
+        model_folder = os.path.join(model_path, model_name_folder)
         model_files = [f for f in os.listdir(model_folder) if f.endswith(".pth") and 'state' not in f.lower()]
         accuracies = []
 

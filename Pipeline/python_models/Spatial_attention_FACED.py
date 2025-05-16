@@ -85,6 +85,8 @@ class ShallowAttentionNet(nn.Module):
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))  
+        #self.tbatch_norm = nn.BatchNorm2d(num_kernels)
+        #self.tpool = nn.AvgPool2d((1, 2))
         self.spatial_att = SpatialAttention(num_kernels)
         self.batch_norm = nn.BatchNorm2d(num_kernels)
         self.pool = nn.AvgPool2d((1, pool_size))
@@ -97,6 +99,8 @@ class ShallowAttentionNet(nn.Module):
         with torch.no_grad():
             x = self.temporal(x)
             x = F.elu(x)
+            #x = self.tbatch_norm(x)
+            #x = self.tpool(x)
             x = self.dropout(x)
             x = self.spatial_att(x)
             x = F.elu(x)
@@ -108,6 +112,10 @@ class ShallowAttentionNet(nn.Module):
     def forward(self, input):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
+        x = F.elu(x)
+        #x = self.tbatch_norm(x)
+        #x = self.tpool(x)
+        #x = self.dropout(x)
         x = self.spatial_att(x)
         x = F.elu(x)
         x = self.batch_norm(x)

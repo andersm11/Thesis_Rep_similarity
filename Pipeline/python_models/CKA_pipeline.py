@@ -10,12 +10,19 @@ npy_dir = "../cka_results"
 
 # Lookup table for model-specific layer names
 layer_name_lookup = {
-    "ShallowFBCSPNet": ["temporal", "spatial", "pool", "fc"],
+    "ShallowFBCSPNet": ["temporal","spatial", "pool", "fc"],
     "ShallowAttentionNet": ["temporal", "spatial_att", "pool", "fc"],
     "ShallowSGCNNet": ["temporal", "sgconv", "pool", "fc"],
     "ShallowLSTM": ["lstm", "spatial", "pool", "fc"],
     "ShallowRNNNet": ["RNN", "spatial", "pool", "fc"],
 }
+# layer_name_lookup = {
+#     "ShallowFBCSPNet": ["temporal", "fc"],
+#     "ShallowAttentionNet": ["temporal", "spatial_att", "pool", "fc"],
+#     "ShallowSGCNNet": ["temporal", "sgconv", "pool", "fc"],
+#     "ShallowLSTM": ["lstm" ,"fc"],
+#     "ShallowRNNNet": ["RNN", "fc"],
+# }
 
 # List all .npy files in the directory
 npy_files = [f for f in os.listdir(npy_dir) if f.endswith('.npy')]
