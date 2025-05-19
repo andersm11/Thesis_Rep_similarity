@@ -2,9 +2,9 @@ from CKA_functions import compose_heat_matrix_acc,compose_heat_matrix_shared_ful
 import os
 import numpy as np
 #compose_heat_matrix_shared("../cka_results","cka_heatmaps","../Shared_Keys","CKA Shared Classification Layers Spatial")
-#compose_heat_matrix_acc("../cka_results","cka_heatmaps","../models","CKA Shared Classification Layers Temporal")
+compose_heat_matrix_acc("../cka_results","cka_heatmaps","../models","CKA Classification Layers Temporal (FACED)")
 
-full = 1
+full = 0
 
 
 # Path to the directory containing the .npy files

@@ -1439,39 +1439,32 @@ def compose_heat_matrix_shared_full(result_folder: str, output_folder: str, csv_
 
 
 def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: str, title: str = "cka heatmap"):
-    """
-    Compose CKA heatmap and show average model accuracies.
 
-    Args:
-        result_folder (str): Folder containing CKA .npy result files.
-        output_folder (str): Folder to save the generated heatmap.
-        model_path (str): Path where model folders are stored.
-        title (str): Title of the heatmap.
-    """
     os.makedirs(output_folder, exist_ok=True)
 
     model_name_map = {
-        "ShallowFBCSPNet": "ShallowFBCSP",
-        "ShallowRNNNet": "ShallowRNN",
+        "ShallowFBCSP": "ShallowFBCSP",
+        "ShallowRNN": "ShallowRNN",
         "ShallowLSTM": "ShallowLSTM",
-        "ShallowAttentionNet": "ShallowAtt",
-        "ShallowSGCNNet": "ShallowSGCN"
+        "ShallowAttention": "ShallowAtt",
+        "ShallowSGCN": "ShallowSGCN"
     }
 
     # Read all .npy files
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
 
-    # Get unique model names
-    model_names = sorted(set(
+    # Get unique model names, removing 'Net' suffix
+    model_names_raw = set(
         name.split("_vs_")[0] for name in cka_files
     ).union(
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
-    ))
+    )
+    model_names = sorted(name[:-3] if name.endswith("Net") else name for name in model_names_raw)
 
     # --- Compute average accuracies ---
     model_accuracies = {}
     for model_name in model_names:
-        model_name_folder = model_name_map.get(model_name, model_name) 
+        model_name_folder = model_name_map.get(model_name, model_name)
         model_folder = os.path.join(model_path, model_name_folder)
         model_files = [f for f in os.listdir(model_folder) if f.endswith(".pth") and 'state' not in f.lower()]
         accuracies = []
@@ -1488,9 +1481,9 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         model_accuracies[model_name] = avg_acc
         print(f"Model {model_name}: Average Accuracy = {avg_acc:.2f}%")
 
-    # Reorder so ShallowFBCSPNet is first
+    # Reorder so ShallowFBCSP is first
     def reorder(models):
-        return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
+        return ['ShallowFBCSP'] + [m for m in models if m != 'ShallowFBCSP']
     
     model_names = reorder(model_names)
     model_accuracies = {k: model_accuracies[k] for k in model_names}
@@ -1501,7 +1494,10 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     annotations = [["" for _ in range(num_models)] for _ in range(num_models)]
 
     for file in cka_files:
-        model1, model2 = file.replace(".npy", "").split("_vs_")
+        raw_model1, raw_model2 = file.replace(".npy", "").split("_vs_")
+        model1 = raw_model1[:-3] if raw_model1.endswith("Net") else raw_model1
+        model2 = raw_model2[:-3] if raw_model2.endswith("Net") else raw_model2
+
         if model1 not in model_names or model2 not in model_names:
             continue
 
@@ -1526,7 +1522,7 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     x_labels = [f"{name}\n({model_accuracies[name]:.2f}%)" for name in model_names]
 
     # Plot
-    plt.figure(figsize=(13, 11))
+    plt.figure(figsize=(10, 8))
     sns.heatmap(
         matrix_vals,
         annot=annotations,
@@ -1539,14 +1535,14 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         cbar=True,
         vmin=0,
         vmax=1,
-        annot_kws={"size": 18}  # Increase heatmap cell text size
+        annot_kws={"size": 18, "weight": "bold"}  # Thicker annotation text
     )
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
 
-    plt.title(title, fontsize=16)
-    plt.xlabel('Model (Avg Accuracy)', fontsize=16)
-    plt.ylabel('Model (Avg Accuracy)', fontsize=16)
+    plt.title(title, fontsize=22)
+    plt.xlabel('Model (Avg Accuracy)', fontsize=18)
+    plt.ylabel('Model (Avg Accuracy)', fontsize=18)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
 
