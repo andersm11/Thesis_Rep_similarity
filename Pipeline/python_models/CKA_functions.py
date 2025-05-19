@@ -1001,7 +1001,7 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
     df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1, annot_kws={"size": 18})
     plt.title(f'CKA Similarity Heatmap ({title1} vs {title2} )')
     plt.xlabel(f'{title2}')
     plt.ylabel(f'{title1}')
@@ -1145,7 +1145,7 @@ def plot_cka_heatmaps(cka_results_dir: str, kernel_dir: str):
             display_cka_matrix(cka_matrix, layers1, layers2, title1, title2,"cka_heatmaps")
             
             
-def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str], title1: str, title2: str, output_folder):
+def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_model2: list[str], Overall_title:str,title1: str, title2: str, output_folder):
     os.makedirs(output_folder, exist_ok=True)
 
     n_layers1 = len(layer_names_model1)
@@ -1160,10 +1160,15 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
     df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1)
-    plt.title(f'CKA Similarity Heatmap ({title1} vs {title2})')
-    plt.xlabel(f'{title2}')
-    plt.ylabel(f'{title1}')
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, 
+                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 18})
+    cbar = plt.gca().collections[0].colorbar
+    cbar.ax.tick_params(labelsize=18)
+    plt.title(f'{Overall_title} ({title1} vs {title2})',fontsize=14)
+    plt.xlabel(f'{title2}', fontsize=16)
+    plt.ylabel(f'{title1}', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
 
     filename = f"{title1}_vs_{title2}.png".replace(" ", "_") 
     filepath = os.path.join(output_folder, filename)
@@ -1317,12 +1322,15 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     # Plot
     plt.figure(figsize=(10, 8))
     sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
-                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 12} )
+                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 16} )
+    
+    cbar = plt.gca().collections[0].colorbar
+    cbar.ax.tick_params(labelsize=18)
     plt.title(title)
-    plt.xlabel('Model')
-    plt.ylabel('Model')
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xlabel('Model', fontsize=16)
+    plt.ylabel('Model', fontsize=16)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
@@ -1416,7 +1424,7 @@ def compose_heat_matrix_shared_full(result_folder: str, output_folder: str, csv_
     # Plot
     plt.figure(figsize=(10, 8))
     sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
-                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 12} )
+                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 18} )
     plt.title(title)
     plt.xlabel('Model')
     plt.ylabel('Model')
@@ -1514,8 +1522,8 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     matrix_vals = np.flipud(matrix_vals)
     annotations = annotations[::-1]
 
-    y_labels = list(reversed([f"{name} ({model_accuracies[name]:.2f}%)" for name in model_names]))
-    x_labels = [f"{name} ({model_accuracies[name]:.2f}%)" for name in model_names]
+    y_labels = list(reversed([f"{name}\n({model_accuracies[name]:.2f}%)" for name in model_names]))
+    x_labels = [f"{name}\n({model_accuracies[name]:.2f}%)" for name in model_names]
 
     # Plot
     plt.figure(figsize=(13, 11))
@@ -1531,14 +1539,16 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         cbar=True,
         vmin=0,
         vmax=1,
-        annot_kws={"size": 14}  # Increase heatmap cell text size
+        annot_kws={"size": 18}  # Increase heatmap cell text size
     )
+    cbar = plt.gca().collections[0].colorbar
+    cbar.ax.tick_params(labelsize=18)
 
     plt.title(title, fontsize=16)
-    plt.xlabel('Model (Avg Accuracy)', fontsize=14)
-    plt.ylabel('Model (Avg Accuracy)', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xlabel('Model (Avg Accuracy)', fontsize=16)
+    plt.ylabel('Model (Avg Accuracy)', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")

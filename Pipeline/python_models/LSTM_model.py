@@ -20,19 +20,13 @@ class ShallowLSTMNet(nn.Module):
 
     def forward(self, input):
         x = input.permute(0, 2, 1)  
-
         x, _ = self.lstm(x) 
-
         x = x.permute(0, 2, 1) 
-
         x = self.spatial(x)  
         x = F.elu(x)
-
         x = self.batch_norm(x)  
-
         x = self.pool(x)
         x = x.reshape(x.size(0), -1)  
-
         x = self.dropout(x)
         x = self.fc(x)  
 

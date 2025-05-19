@@ -216,13 +216,13 @@ def plot_and_save_class_accuracy(models_cm_avg, class_labels, output_path):
     
     # Plot histogram
     plt.figure(figsize=(10, 6))
-    ax = sns.barplot(x="Class", y="Accuracy", hue="Model", data=df)
+    ax = sns.barplot(x="Class", y="Accuracy", hue="Model", data=df, palette="pastel", edgecolor="black",linewidth=1.0)
     for p in ax.patches:
         height = p.get_height()
-        ax.annotate(f"{height:.2f}", 
-                    (p.get_x() + p.get_width() / 2., height), 
-                    ha='center', va='bottom', 
-                    fontsize=12, fontweight='bold', color='black')
+        ax.annotate(f"{height:.2f}",
+                    (p.get_x() + p.get_width() / 2., height + 1),  # <- vertical offset
+                    ha='center', va='bottom',
+                    fontsize=10, fontweight='bold', color='black')
     
     # Labels and title
     plt.xlabel("Class Label")
@@ -235,30 +235,48 @@ def plot_and_save_class_accuracy(models_cm_avg, class_labels, output_path):
     plt.close()
     
 def plot_and_save_overall_accuracy(models_cm_avg, output_path):
-    """Plot and save overall accuracy comparison between models."""
-    
-    # Calculate overall accuracy for each model (sum of diagonal elements / sum of all elements)
-    overall_accuracy = {model_name: np.diag(cm_avg).sum() / cm_avg.sum() * 100 for model_name, cm_avg in models_cm_avg.items()}
-    
-    # Create a DataFrame for plotting
-    df = pd.DataFrame(list(overall_accuracy.items()), columns=["Model", "Accuracy"])
-    
-    # Plot overall accuracy comparison
+    """Plot and save overall accuracy comparison between models with deviation info and styled bars."""
+    deviation_ = [1.0,0.78,0,1.07,0.4]
+    overall_accuracy = {
+        model_name: np.diag(cm_avg).sum() / cm_avg.sum() * 100
+        for model_name, cm_avg in models_cm_avg.items()
+    }
+
+    # Prepare DataFrame
+    model_names = list(overall_accuracy.keys())
+    accuracies = [math.ceil(acc) for acc in overall_accuracy.values()]
+    deviations = [dev for dev in deviation_]
+    df = pd.DataFrame({
+        "Model": model_names,
+        "Accuracy": accuracies,
+        "Deviation": deviations
+    })
+
+    # Plot
     plt.figure(figsize=(10, 6))
-    ax = sns.barplot(x="Model", y="Accuracy", data=df, hue="Model")
-    for p in ax.patches:
-        height = p.get_height()
-        ax.annotate(f"{height:.2f}", 
-                    (p.get_x() + p.get_width() / 2., height), 
-                    ha='center', va='bottom', 
-                    fontsize=12, fontweight='bold', color='black')
-    
-    # Labels and title
-    plt.xlabel("Model")
-    plt.ylabel("Overall Accuracy (%)")
-    plt.title("Overall Accuracy Comparison Between Models")
+    ax = sns.barplot(
+        x="Model", y="Accuracy", data=df,
+        palette="pastel", edgecolor="black", linewidth=1.5
+    )
+
+    # Annotate with accuracy ± deviation (rounded up)
+    for i, p in enumerate(ax.patches):
+        acc = accuracies[i]
+        dev = deviations[i]
+        ax.annotate(f"{acc}\u00B1{dev}",
+                    (p.get_x() + p.get_width() / 2., p.get_height()),
+                    ha='center', va='bottom',
+                    fontsize=20, fontweight='bold', color='black')
+
+    # Final touches
+    plt.xlabel("Model",fontsize=18)
+    plt.ylabel("Mean Model Accuracy (%\u00B1 STD)",fontsize=20)
+    plt.title("Mean Model Accuracy (FACED)",fontsize=22)
     plt.ylim(0, 100)
-    
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.tight_layout()
+
     # Save the figure
     plt.savefig(os.path.join(output_path, "overall_accuracy_comparison.png"), dpi=300)
     plt.close()
