@@ -1001,10 +1001,12 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
     df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1, annot_kws={"size": 18})
+    sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True, vmin=0, vmax=1, annot_kws={"size": 20})
     plt.title(f'CKA Similarity Heatmap ({title1} vs {title2} )')
     plt.xlabel(f'{title2}')
     plt.ylabel(f'{title1}')
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.show()
     
     
@@ -1161,14 +1163,14 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
 
     plt.figure(figsize=(10, 8))
     sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, 
-                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 18})
+                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 18,"weight":"bold"})
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
-    plt.title(f'{Overall_title} ({title1} vs {title2})',fontsize=14)
-    plt.xlabel(f'{title2}', fontsize=16)
-    plt.ylabel(f'{title1}', fontsize=16)
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
+    plt.title(f'{Overall_title} ({title1} vs {title2})',fontsize=18)
+    plt.xlabel(f'{title2}', fontsize=18)
+    plt.ylabel(f'{title1}', fontsize=18)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
 
     filename = f"{title1}_vs_{title2}.png".replace(" ", "_") 
     filepath = os.path.join(output_folder, filename)
@@ -1249,7 +1251,7 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         "ShallowRNNNet": 4832,
         "ShallowLSTM": 2238,
         "ShallowAttentionNet": 9384,
-        "ShallowSGCNNet": 5287
+        "ShallowSGCNNet": 11027
     }
 
     # Read CKA results
@@ -1265,8 +1267,7 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     def reorder(models):
         return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
 
-    model_names = reorder(model_names)
-
+    model_names= reorder(model_names)
     num_models = len(model_names)
     cka_matrix = np.zeros((num_models, num_models))
     annotation_matrix = [["" for _ in range(num_models)] for _ in range(num_models)]
@@ -1314,6 +1315,11 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     # Flip vertically for proper heatmap orientation
     cka_matrix = np.flipud(cka_matrix)
     annotation_matrix = list(reversed(annotation_matrix))
+    model_names = sorted(name[:-3] if name.endswith("Net") else name for name in model_names)
+    def reorder(model_names):
+        # Move "ShallowFBCSP" to the front, sort the rest
+        return ["ShallowFBCSP"] + sorted(name for name in model_names if name != "ShallowFBCSP")
+    model_names = reorder(model_names)
     model_names_reversed = list(reversed(model_names))
 
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
@@ -1321,16 +1327,26 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
 
     # Plot
     plt.figure(figsize=(10, 8))
-    sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
-                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 16} )
-    
+    sns.heatmap(
+        df,
+        annot=annot_df,
+        fmt='',
+        cmap='gist_heat',
+        square=True,
+        linewidths=0.5,
+        cbar=True,
+        vmin=0,
+        vmax=1,
+        annot_kws={"size": 18, "weight": "bold"}  # Thicker annotation text
+    )
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
-    plt.title(title)
-    plt.xlabel('Model', fontsize=16)
-    plt.ylabel('Model', fontsize=16)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+
+    plt.title(title, fontsize=22)
+    plt.xlabel('Model', fontsize=18)
+    plt.ylabel('Model', fontsize=18)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
@@ -1423,13 +1439,26 @@ def compose_heat_matrix_shared_full(result_folder: str, output_folder: str, csv_
 
     # Plot
     plt.figure(figsize=(10, 8))
-    sns.heatmap(df, annot=annot_df, cmap='gist_heat', fmt='', square=True,
-                linewidths=0.5, cbar=True, vmin=0, vmax=1,annot_kws={"size": 18} )
-    plt.title(title)
-    plt.xlabel('Model')
-    plt.ylabel('Model')
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    sns.heatmap(
+        df,
+        annot=annot_df,
+        fmt='',
+        cmap='gist_heat',
+        square=True,
+        linewidths=0.5,
+        cbar=True,
+        vmin=0,
+        vmax=1,
+        annot_kws={"size": 18, "weight": "bold"}  # Thicker annotation text
+    )
+    cbar = plt.gca().collections[0].colorbar
+    cbar.ax.tick_params(labelsize=18)
+
+    plt.title(title, fontsize=22)
+    plt.xlabel('Model', fontsize=18)
+    plt.ylabel('Model', fontsize=18)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")

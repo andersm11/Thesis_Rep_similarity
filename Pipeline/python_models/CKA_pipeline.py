@@ -1,10 +1,10 @@
 from CKA_functions import compose_heat_matrix_acc,compose_heat_matrix_shared_full,compose_heat_matrix_shared,display_cka_matrix
 import os
 import numpy as np
-#compose_heat_matrix_shared("../cka_results","cka_heatmaps","../Shared_Keys","CKA Shared Classification Layers Spatial")
-compose_heat_matrix_acc("../cka_results","cka_heatmaps","../models","CKA Classification Layers Temporal (FACED)")
+#compose_heat_matrix_shared("../cka_results","cka_heatmaps","../Shared_Keys","CKA Shared Extraction Layers Temporal")
+#compose_heat_matrix_acc("../cka_results","cka_heatmaps","../models","CKA Classification Layers Temporal (FACED)")
 
-full = 0
+full = 1
 
 
 # Path to the directory containing the .npy files
@@ -53,7 +53,7 @@ if full != 0:
         data = np.load(file_path, allow_pickle=True)
 
         # Display matrix
-        display_cka_matrix(data, layer_names1, layer_names2,"CKA All Models Agreement", model1, model2, "cka_heatmaps/All_Model_Temporal_Agreement")
+        display_cka_matrix(data, layer_names1, layer_names2,"CKA Temporal Consensus", model1, model2, "cka_heatmaps/Temporal_consensus")
 
         # Print the raw data
         print(f"Contents of {npy_file}:")
