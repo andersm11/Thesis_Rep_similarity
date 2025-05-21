@@ -18,10 +18,6 @@ def get_predictions(model, dataloader: DataLoader, device):
     model.to(device)
     model.eval()
     preds = []
-    print(ShallowSGCNNet.__module__)
-    print(model.__module__)
-    print(model)
-    print(isinstance(model, ShallowSGCNNet))
     if isinstance(model, ShallowSGCNNet) and (ShallowSGCNNet.__module__ == 'SGCN' or ShallowSGCNNet.__module__ == 'RGNN'):
         adj_m,pos = adjacency_matrix_motion()
         adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=10)
