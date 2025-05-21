@@ -85,7 +85,7 @@ class SpatialAttention(nn.Module):
         x = x * attention_map
 
         # **Apply Pooling**
-        #x = self.pool(x)
+        x = self.pool(x)
 
         return x  # Weighted Feature Maps
 
