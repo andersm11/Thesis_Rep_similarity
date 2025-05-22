@@ -1239,19 +1239,19 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     os.makedirs(output_folder, exist_ok=True)
 
     model_name_map = {
-        "ShallowFBCSPNet": "Shallow",
-        "ShallowRNNNet": "RNN",
+        "ShallowFBCSP": "Shallow",
+        "ShallowRNN": "RNN",
         "ShallowLSTM": "LSTM",
         "ShallowAttentionNet": "Attention",
         "ShallowSGCNNet": "SGCN"
     }
 
     model_unanimous_map = {
-        "ShallowFBCSPNet": 10726,
-        "ShallowRNNNet": 4832,
-        "ShallowLSTM": 2238,
-        "ShallowAttentionNet": 9384,
-        "ShallowSGCNNet": 11027
+        "ShallowFBCSP": 1503,
+        "ShallowRNN": 824,
+        "ShallowLSTM": 1013,
+        "ShallowAttentionNet": 1235,
+        "ShallowSGCNNet": 829
     }
 
     # Read CKA results
@@ -1262,13 +1262,15 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     ).union(
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
     ))
-
+    print(model_names)
     # Reorder so ShallowFBCSPNet is first
     def reorder(models):
-        return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
+        return ['ShallowFBCSP'] + [m for m in models if m not in {'ShallowFBCSPNet', 'ShallowFBCSP'}]
 
     model_names= reorder(model_names)
+    print(model_names)
     num_models = len(model_names)
+    print(num_models)
     cka_matrix = np.zeros((num_models, num_models))
     annotation_matrix = [["" for _ in range(num_models)] for _ in range(num_models)]
 
@@ -1291,11 +1293,11 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         keyfile1 = os.path.join(csv_folder, f"Shared_Keys_{model1_csv}_and_{model2_csv}.csv")
         keyfile2 = os.path.join(csv_folder, f"Shared_Keys_{model2_csv}_and_{model1_csv}.csv")
         keyfile = keyfile1 if os.path.exists(keyfile1) else keyfile2 if os.path.exists(keyfile2) else None
-
+        print("keyfile:",keyfile)
         if keyfile and os.path.isfile(keyfile):
             with open(keyfile, "r") as f:
                 shared_lines = f.readlines()
-            num_keys = len(shared_lines) - 1 if "idx" in shared_lines[0].lower() else len(shared_lines)
+            num_keys = len(shared_lines) - 1 if ("idx" in shared_lines[0].lower() or "index" in shared_lines[0].lower()) else len(shared_lines)
         else:
             num_keys = 0
             # print("keyfile not found or not a file:", keyfile)
@@ -1321,7 +1323,7 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         return ["ShallowFBCSP"] + sorted(name for name in model_names if name != "ShallowFBCSP")
     model_names = reorder(model_names)
     model_names_reversed = list(reversed(model_names))
-
+    print(cka_matrix)
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
     annot_df = pd.DataFrame(annotation_matrix, index=model_names_reversed, columns=model_names)
 
@@ -1472,11 +1474,11 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     os.makedirs(output_folder, exist_ok=True)
 
     model_name_map = {
-        "ShallowFBCSP": "ShallowFBCSP",
+        "ShallowFBCSP": "Shallow",
         "ShallowRNN": "ShallowRNN",
         "ShallowLSTM": "ShallowLSTM",
-        "ShallowAttention": "ShallowAtt",
-        "ShallowSGCN": "ShallowSGCN"
+        "ShallowAttention": "ShallowAttentionNet",
+        "ShallowSGCN": "ShallowSGCNNet"
     }
 
     # Read all .npy files

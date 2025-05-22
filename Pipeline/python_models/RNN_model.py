@@ -6,7 +6,7 @@ class ShallowRNNNet(nn.Module):
     def __init__(self, n_chans, n_outputs, n_times, dropout=0.5, num_kernels=40, kernel_size=25, pool_size=50, hidden_size=32, nr_layers=1):
         super(ShallowRNNNet, self).__init__()
         self.RNN = nn.RNN(input_size=n_chans, hidden_size=hidden_size, num_layers=nr_layers, batch_first=True)
-        self.spatial = nn.Conv2d(1, num_kernels*2, (n_chans, 1))
+        self.spatial = nn.Conv2d(1, num_kernels*2, (hidden_size, 1))
         self.batch_norm = nn.BatchNorm2d(num_kernels*2)
         self.pool = nn.AvgPool2d((1, pool_size))
         self.dropout = nn.Dropout(dropout)

@@ -27,13 +27,8 @@ class SimpleGCNNet(torch.nn.Module):
         super(SimpleGCNNet, self).__init__()
         self.edge_weights = nn.Parameter(edge_weights.float(),requires_grad=True)
         self.sgconv = SGConv(time_steps, num_hiddens, K=K, add_self_loops=True)
-        self.threshold = 0.1
 
     def forward(self, x, edge_index, alpha=0):
-        #mask = self.edge_weights >= self.threshold
-        #filtered_edge_index = edge_index[:, mask]
-        #filtered_edge_weights = self.edge_weights[mask]
-        #filtered_weights = F.softplus(self.edge_weights)
         x = F.normalize(x, p=2, dim=-1)  # Normalize each node's features to unit norm
         x = self.sgconv(x, edge_index,self.edge_weights)
         return x

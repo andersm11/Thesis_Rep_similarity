@@ -1,10 +1,10 @@
 from CKA_functions import compose_heat_matrix_acc,compose_heat_matrix_shared_full,compose_heat_matrix_shared,display_cka_matrix
 import os
 import numpy as np
-#compose_heat_matrix_shared("../cka_results","cka_heatmaps","../Shared_Keys","CKA Shared Extraction Layers Temporal")
-#compose_heat_matrix_acc("../cka_results","cka_heatmaps","../models","CKA Classification Layers Temporal (FACED)")
+#compose_heat_matrix_shared("../cka_results","motion_cka","../Shared_Keys_motion","CKA Shared Extraction Layers Spatial (Motion)")
+compose_heat_matrix_acc("../cka_results","motion_cka","../motion_models","CKA Classification Layers Temporal (Motion)")
 
-full = 1
+full = 0
 
 
 # Path to the directory containing the .npy files
