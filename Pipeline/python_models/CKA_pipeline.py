@@ -1,8 +1,8 @@
 from CKA_functions import compose_heat_matrix_acc,compose_heat_matrix_shared_full,compose_heat_matrix_shared,display_cka_matrix
 import os
 import numpy as np
-#compose_heat_matrix_shared("../cka_results","motion_cka","../Shared_Keys_motion","CKA Shared Extraction Layers Spatial (Motion)")
-compose_heat_matrix_acc("../cka_results","motion_cka","../motion_models","CKA Classification Layers Temporal (Motion)")
+compose_heat_matrix_shared("../cka_results","motion_cka","../Shared_Keys_motion","CKA Shared Classification Temporal (Motion)")
+#compose_heat_matrix_acc("../cka_results","motion_cka","../motion_models","CKA Classification Temporal (Motion)")
 
 full = 0
 

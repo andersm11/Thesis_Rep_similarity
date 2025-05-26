@@ -1239,19 +1239,19 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     os.makedirs(output_folder, exist_ok=True)
 
     model_name_map = {
-        "ShallowFBCSP": "Shallow",
-        "ShallowRNN": "RNN",
+        "ShallowFBCSPNet": "Shallow",
+        "ShallowRNNNet": "RNN",
         "ShallowLSTM": "LSTM",
         "ShallowAttentionNet": "Attention",
         "ShallowSGCNNet": "SGCN"
     }
 
     model_unanimous_map = {
-        "ShallowFBCSP": 1503,
-        "ShallowRNN": 824,
-        "ShallowLSTM": 1013,
-        "ShallowAttentionNet": 1235,
-        "ShallowSGCNNet": 829
+        "ShallowFBCSPNet": 10726,
+        "ShallowRNNNet": 4832,
+        "ShallowLSTM": 2238,
+        "ShallowAttentionNet": 9387,
+        "ShallowSGCNNet": 11027
     }
 
     # Read CKA results
@@ -1310,20 +1310,21 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
 
         print(f"num keys: {num_keys}, for models: {model1} and {model2}")
 
-        annotation_text = f"{cka_value:.2f}\n(n={num_keys})"
+        annotation_text = f"{cka_value:.2f}"
         annotation_matrix[i][j] = annotation_text
         annotation_matrix[j][i] = annotation_text
 
     # Flip vertically for proper heatmap orientation
     cka_matrix = np.flipud(cka_matrix)
+    print(cka_matrix)
     annotation_matrix = list(reversed(annotation_matrix))
     model_names = sorted(name[:-3] if name.endswith("Net") else name for name in model_names)
-    def reorder(model_names):
-        # Move "ShallowFBCSP" to the front, sort the rest
-        return ["ShallowFBCSP"] + sorted(name for name in model_names if name != "ShallowFBCSP")
+
     model_names = reorder(model_names)
+    model_names = [name.removeprefix("Shallow").removesuffix("Net") for name in model_names]
+
     model_names_reversed = list(reversed(model_names))
-    print(cka_matrix)
+    print(model_names_reversed)
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
     annot_df = pd.DataFrame(annotation_matrix, index=model_names_reversed, columns=model_names)
 
@@ -1339,16 +1340,16 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         cbar=True,
         vmin=0,
         vmax=1,
-        annot_kws={"size": 18, "weight": "bold"}  # Thicker annotation text
+        annot_kws={"size": 24, "weight": "bold"}  # Thicker annotation text
     )
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
 
     plt.title(title, fontsize=22)
-    plt.xlabel('Model', fontsize=18)
-    plt.ylabel('Model', fontsize=18)
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
+    # plt.xlabel('Model', fontsize=18)
+    # plt.ylabel('Model', fontsize=18)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
@@ -1474,11 +1475,11 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     os.makedirs(output_folder, exist_ok=True)
 
     model_name_map = {
-        "ShallowFBCSP": "Shallow",
+        "ShallowFBCSP": "ShallowFBCSP",
         "ShallowRNN": "ShallowRNN",
         "ShallowLSTM": "ShallowLSTM",
-        "ShallowAttention": "ShallowAttentionNet",
-        "ShallowSGCN": "ShallowSGCNNet"
+        "ShallowAttention": "ShallowAtt",
+        "ShallowSGCN": "ShallowSGCN"
     }
 
     # Read all .npy files
@@ -1515,11 +1516,11 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     # Reorder so ShallowFBCSP is first
     def reorder(models):
         return ['ShallowFBCSP'] + [m for m in models if m != 'ShallowFBCSP']
-    
     model_names = reorder(model_names)
     model_accuracies = {k: model_accuracies[k] for k in model_names}
 
     # Construct annotated matrix
+
     num_models = len(model_names)
     matrix_vals = np.zeros((num_models, num_models))
     annotations = [["" for _ in range(num_models)] for _ in range(num_models)]
@@ -1541,16 +1542,16 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         acc1 = model_accuracies[model1]
         acc2 = model_accuracies[model2]
 
-        annotation = f"{cka_value:.2f}\n({acc1:.0f}% vs {acc2:.0f}%)"
+        annotation = f"{cka_value:.2f}"
         annotations[i][j] = annotation
-        annotations[j][i] = f"{cka_value:.2f}\n({acc2:.0f}% vs {acc1:.0f}%)"
+        annotations[j][i] = f"{cka_value:.2f}"
 
     # Flip matrix vertically
     matrix_vals = np.flipud(matrix_vals)
     annotations = annotations[::-1]
 
-    y_labels = list(reversed([f"{name}\n({model_accuracies[name]:.2f}%)" for name in model_names]))
-    x_labels = [f"{name}\n({model_accuracies[name]:.2f}%)" for name in model_names]
+    y_labels = list(reversed([f"{name.removeprefix("Shallow").removesuffix("Net")}\n({model_accuracies[name]:.2f}%)" for name in model_names]))
+    x_labels = [f"{name.removeprefix("Shallow").removesuffix("Net")}\n({model_accuracies[name]:.2f}%)" for name in model_names]
 
     # Plot
     plt.figure(figsize=(10, 8))
@@ -1566,16 +1567,16 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         cbar=True,
         vmin=0,
         vmax=1,
-        annot_kws={"size": 18, "weight": "bold"}  # Thicker annotation text
+        annot_kws={"size": 24, "weight": "bold"}  # Thicker annotation text
     )
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
 
     plt.title(title, fontsize=22)
-    plt.xlabel('Model (Avg Accuracy)', fontsize=18)
-    plt.ylabel('Model (Avg Accuracy)', fontsize=18)
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
+    # plt.xlabel('Model (Avg Accuracy)', fontsize=18)
+    # plt.ylabel('Model (Avg Accuracy)', fontsize=18)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
 
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
