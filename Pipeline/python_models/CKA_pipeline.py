@@ -1,45 +1,61 @@
-from CKA_functions import compute_all_model_kernels,compute_all_model_CKA,load_model_metadata,plot_cka_heatmaps
-from CKA_functions import load_dataset,fix_dataset_shape,compute_cross_model_cka,display_cka_matrix,compute_multi_model_kernels,display_differences_matrix_og
-from CKA_functions import compose_heat_matrix
-import numpy as np
+from CKA_functions import compose_heat_matrix_acc,compose_heat_matrix_shared_full,compose_heat_matrix_shared,display_cka_matrix
 import os
-import torch
-model_direc = "models"
-activation_direc = "activations"
-kernel_direc = "kernels"
-use_cuda = torch.cuda.is_available()
-device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
-X = fix_dataset_shape(load_dataset("test_set.pkl","Datasets/")).to(device)
-layer_names=["temporal","lstm","RNN"]
-batch_size = 128
-n_batches = 8
-# model_layer_names, model_names = compute_multi_model_kernels(model_direc,
-#                             activation_direc,
-#                             kernel_direc,X,
-#                             layer_names=layer_names,
-#                             batch_size=batch_size,
-#                             n_batches=n_batches)
-# compute_all_model_kernels(model_direc,
-#                             activation_direc,
-#                             kernel_direc,X,
-#                             layer_names=layer_names,
-#                             batch_size=batch_size,
-#                             n_batches=n_batches)
-# compute_all_model_CKA(kernel_direc,"cka_results")
-#cka_results = compute_all_model_CKA(kernel_direc,"cka_temp_results")
-# cka_results = np.array([[0.89855301 ,0.22526194 ,0.11029866, 0.08708372],
-#  [0.49409801, 0.4049519 , 0.29927254, 0.242651  ],
-#  [0.28096467 ,0.52176714 ,0.56983662, 0.47695962],
-#  [0.14419821, 0.37224442 ,0.56296223, 0.70330274]])
-# print("final:_", cka_results)
-# os.makedirs("ckaResults", exist_ok=True)
-# np.save("ckaResults/cka_results.npy", cka_results) 
-# np.savetxt("ckaResults/cka_results.csv", cka_results, delimiter=",")
-# display_differences_matrix_og(cka_results,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
-# cka_differences =compute_cka_changes(cka_results)
-# print("differences:",cka_differences)
-#display_differences_matrix(cka_differences,model_layer_names[0],model_layer_names[1],model_names[0],model_names[1])
-# plot_cka_heatmaps("cka_results","kernels")
-compose_heat_matrix("cka_results","cka_heatmaps","CKA temp heatmap")
+import numpy as np
+compose_heat_matrix_shared("../cka_results","motion_cka","../Shared_Keys_motion","CKA Shared Classification Temporal (Motion)")
+#compose_heat_matrix_acc("../cka_results","motion_cka","../motion_models","CKA Classification Temporal (Motion)")
+
+full = 0
 
 
+# Path to the directory containing the .npy files
+npy_dir = "../cka_results"
+
+# Lookup table for model-specific layer names
+layer_name_lookup = {
+    "ShallowFBCSPNet": ["temporal","spatial", "pool", "fc"],
+    "ShallowAttentionNet": ["temporal", "spatial_att", "pool", "fc"],
+    "ShallowSGCNNet": ["temporal", "sgconv", "pool", "fc"],
+    "ShallowLSTM": ["lstm", "spatial", "pool", "fc"],
+    "ShallowRNNNet": ["RNN", "spatial", "pool", "fc"],
+}
+# layer_name_lookup = {
+#     "ShallowFBCSPNet": ["temporal", "fc"],
+#     "ShallowAttentionNet": ["temporal", "spatial_att", "pool", "fc"],
+#     "ShallowSGCNNet": ["temporal", "sgconv", "pool", "fc"],
+#     "ShallowLSTM": ["lstm" ,"fc"],
+#     "ShallowRNNNet": ["RNN", "fc"],
+# }
+
+# List all .npy files in the directory
+if full != 0:
+    npy_files = [f for f in os.listdir(npy_dir) if f.endswith('.npy')]
+    print(f"Found {len(npy_files)} .npy files in {npy_dir}.")
+    # Load and display the contents of each .npy file
+    for npy_file in npy_files:
+        # Parse model names from filename
+        base_name = os.path.splitext(npy_file)[0]
+        try:
+            model1, model2 = base_name.split("_vs_")
+        except ValueError:
+            print(f"Skipping invalid filename: {npy_file}")
+            continue
+
+        # Look up layer names
+        layer_names1 = layer_name_lookup.get(model1)
+        layer_names2 = layer_name_lookup.get(model2)
+
+        if layer_names1 is None or layer_names2 is None:
+            print(f"Missing layer name lookup for: {model1} or {model2}")
+            continue
+
+        # Load data
+        file_path = os.path.join(npy_dir, npy_file)
+        data = np.load(file_path, allow_pickle=True)
+
+        # Display matrix
+        display_cka_matrix(data, layer_names1, layer_names2,"CKA Temporal Consensus", model1, model2, "cka_heatmaps/Temporal_consensus")
+
+        # Print the raw data
+        print(f"Contents of {npy_file}:")
+        print(data)
+        print("-" * 60)

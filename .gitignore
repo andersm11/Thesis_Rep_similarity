@@ -1,3 +1,7 @@
 WIP/train_set.pkl
+Pipeline/kernels.zip
+Pipeline/Datasets/test_set.pkl
+Pipeline/Datasets/train_set.pkl
+Pipeline/eeg_env
 eeg_env
 myenv
