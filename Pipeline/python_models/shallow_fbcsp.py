@@ -22,7 +22,6 @@ class ShallowFBCSPNet(nn.Module):
         self.n_outputs = n_outputs
         self.n_times = n_times
         self.temporal = nn.Conv2d(1, num_kernels, (1, kernel_size))
-        #self.tpool = nn.AvgPool2d((1, 2))
         self.spatial = nn.Conv2d(num_kernels, num_kernels, (n_chans, 1))
         self.pool = nn.AvgPool2d((1, pool_size))
         self.batch_norm = nn.BatchNorm2d(num_kernels)
