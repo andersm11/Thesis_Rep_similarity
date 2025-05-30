@@ -62,17 +62,16 @@ class ShallowSGCNNet(nn.Module):
             return x.size(-1)  
 
     def get_e_index(self,dm):
-        threshold = 0  # Adjust as needed
+        threshold = 0  
 
         source_nodes = []
         target_nodes = []
 
-        # Iterate over all elements in the distance matrix, including self-loops and duplicates
         for i in range(dm.shape[0]):
-            for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
-                if dm[i, j] >= threshold:  # If the distance meets the condition
-                    source_nodes.append(i)  # Source node
-                    target_nodes.append(j)  # Target node
+            for j in range(dm.shape[1]):  
+                if dm[i, j] >= threshold:  
+                    source_nodes.append(i) 
+                    target_nodes.append(j)  
 
         # Create the edge_index tensor
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
