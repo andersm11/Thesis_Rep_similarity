@@ -20,6 +20,8 @@ This repository contains trained models and Centered Kernel Alignment (CKA) resu
 
 - Some imports or file references may be broken due to recent refactoring and cleanup. Please ensure import paths are updated if you encounter issues when running scripts.
 
-## 🧠 About CKA
+## 🎲 Good Luck!
 
-Centered Kernel Alignment (CKA) is used here to measure the similarity of internal representations between different trained neural networks. This can provide insights into how different models or training settings affect learned features, even when model performance is similar.
+If you have the misfortune of encountering this git, we wish you good luck.  
+
+
