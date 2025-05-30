@@ -46,7 +46,6 @@ class ShallowFBCSPNet(nn.Module):
         x = torch.unsqueeze(input, dim=1)
         x = self.temporal(x)
         x = F.elu(x)
-        x = self.dropout(x)
         x = self.spatial(x)
         x = F.elu(x)
         x = self.batch_norm(x)

@@ -17,11 +17,12 @@ import os
 from typing import Type,Optional
 import torch.nn.functional as F
 import os
+
 # CKA math
 
 def linear_kernel(X,Xt):
     """Computes the linear kernel matrix for X."""
-    return X @ Xt  # Dot product
+    return X @ Xt 
 
 def cosine_kernel(X, Xt=None):
     if Xt is None:
@@ -176,38 +177,36 @@ def extract_model_activations(model: torch.nn.Module, input_tensor: torch.Tensor
     if isinstance(model, ShallowSGCNNet) and (ShallowSGCNNet.__module__ == 'SGCN' or ShallowSGCNNet.__module__ == 'RGNN'):
         adj_m,pos = adjacency_matrix_motion()
         adj_dis_m, dm = adjacency_matrix_distance_motion(pos,delta=10)
-        threshold = 0  # Adjust as needed
+        threshold = 0  
         source_nodes = []
         target_nodes = []
 
-        # Iterate over all elements in the distance matrix, including self-loops and duplicates
         for i in range(dm.shape[0]):
-            for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
-                if dm[i, j] >= threshold:  # If the distance meets the condition
-                    source_nodes.append(i)  # Source node
-                    target_nodes.append(j)  # Target node
+            for j in range(dm.shape[1]):  
+                if dm[i, j] >= threshold:  
+                    source_nodes.append(i)  
+                    target_nodes.append(j) 
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
     elif isinstance(model, ShallowSGCNNet) and ShallowSGCNNet.__module__ == 'SGCN_FACED_norm':
         adj_m,pos = adjacency_matrix_FACED()
         adj_dis_m, dm = adjacency_matrix_distance_FACED(pos,delta=5)
-        threshold = 0  # Adjust as needed
+        threshold = 0 
         source_nodes = []
         target_nodes = []
         for i in range(dm.shape[0]):
-            for j in range(dm.shape[1]):  # Iterate over all pairs, including (i, i)
-                if dm[i, j] >= threshold:  # If the distance meets the condition
-                    source_nodes.append(i)  # Source node
-                    target_nodes.append(j)  # Target node
+            for j in range(dm.shape[1]): 
+                if dm[i, j] >= threshold: 
+                    source_nodes.append(i)  
+                    target_nodes.append(j)  
         edge_index = torch.tensor([source_nodes, target_nodes], dtype=torch.long)
     
     with torch.no_grad():
         for i in range(0, input_tensor.shape[0], batch_size):
-            batch = input_tensor[i:i + batch_size]  # Select current batch
+            batch = input_tensor[i:i + batch_size] 
             if isinstance(model,ShallowSGCNNet):
                 _ = model(batch,edge_index.to(device))
             else:
-                _ = model(batch)  # Forward pass through the model
-            # Save activations after each batch
+                _ = model(batch) 
             for name, activation in activations.items():
                 batch_idx = i // batch_size + 1  
                 print(f"saving: {name}_batch_{batch_idx}.pt")
@@ -307,7 +306,6 @@ def extract_model_activations_indexed(
 def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, total_samples: int, load_dir:str, n_batches: int =1, device='cpu'):
     """Computes the full kernel matrix in batches efficiently using matrix multiplication."""
     
-    #device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
 
     full_kernel = torch.zeros((total_samples, total_samples), dtype=torch.float32, device=device)
     
@@ -318,7 +316,6 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
         start_idx_col = (batch_idx - 1) * batch_size * n_batches
         end_idx_col = min(start_idx_col + batch_size * n_batches, total_samples)  
 
-        # Load multiple batches at once
         for sub_batch in range(n_batches):
             batch_file_idx = (batch_idx - 1) * n_batches + sub_batch + 1
             if batch_file_idx > math.ceil(total_nr_batches):
@@ -354,9 +351,7 @@ def compute_kernel_full_lowmem(layer, total_nr_batches:int, batch_size:int, tota
             batch_activations_transpose = torch.cat(batch_activations_transpose_list, dim=0)
             kernel_block = linear_kernel(batch_activations,batch_activations_transpose.T)
             #kernel_block = rbf_kernel(batch_activations,batch_activations_transpose,sigma=None)
-           # kernel_block = cosine_kernel(batch_activations,batch_activations_transpose)
-            #kernel_block = polynomial_kernel(batch_activations,batch_activations_transpose)
-            #TODO
+
             full_kernel[start_idx_col:end_idx_col, start_idx_row:end_idx_row] = kernel_block.to('cpu')
             full_kernel[start_idx_row:end_idx_row, start_idx_col:end_idx_col] = kernel_block.T  # Use symmetry
     return full_kernel.cpu()
@@ -472,8 +467,6 @@ def compute_multi_model_kernels_indexed(
     total_nr_batches = math.ceil(total_samples / batch_size)
     final_layer_names=[]
     final_model_names=[]
-    #use_cuda = torch.cuda.is_available()
-    #device = torch.device("cuda" if use_cuda and torch.cuda.is_available() else "cpu")
     for model_file in model_files:
         if not model_file.endswith('state.pth'):
             print("splitting model file:", model_file)
@@ -582,7 +575,7 @@ def compute_all_model_kernels_indexed(
         "keyfile_path": keyfile_path
     }
 
-    # Only process directories matching the two target models
+
     model_directories = os.listdir(target_directory)
     for direc in model_directories:
         if direc not in target_folders:
@@ -593,7 +586,7 @@ def compute_all_model_kernels_indexed(
         layer_list, model_list = compute_multi_model_kernels_indexed(model_path, **kwargs)
 
         if not model_list:
-            continue  # skip if model failed
+            continue  
 
         model_name = model_list[0]
         kernel_specific_path = os.path.join(kernels_directory, model_name)
@@ -617,7 +610,7 @@ def compute_all_model_kernels_indexed_all(
     device: Optional[torch.device] = 'cpu',
     keyfile_path: str = 'Shared_Keys_Shallow_and_RNN.csv'
 ):
-    # Map human-readable model names to folder names
+
     model_name_map = {
         "Attention": "ShallowAtt",
         "Shallow": "ShallowFBCSP",
@@ -626,15 +619,7 @@ def compute_all_model_kernels_indexed_all(
         "SGCN": "ShallowSGCN"
     }
 
-    # # Parse keyfile to get model pair
-    # try:
-    #     basename = os.path.basename(keyfile_path)
-    #     model1_str, model2_str = basename.replace("Shared_Keys_", "").replace(".csv", "").split("_and_")
-    #     target_folders = {model_name_map[model1_str], model_name_map[model2_str]}
-    # except Exception as e:
-    #     raise ValueError(f"Failed to parse model names from keyfile `{keyfile_path}`: {e}")
-
-    # Prepare common kwargs
+    # Prepare commmon kwargs
     kwargs = {
         "activations_root_directory": activations_root_directory,
         "kernels_directory": kernels_directory,
@@ -647,11 +632,9 @@ def compute_all_model_kernels_indexed_all(
         "keyfile_path": keyfile_path
     }
 
-    # Only process directories matching the two target models
     model_directories = os.listdir(target_directory)
     for direc in model_directories:
-        # if direc not in target_folders:
-        #     continue  # skip unrelated models
+
 
         model_path = os.path.join(target_directory, direc)
         print("Processing model:", model_path)
@@ -679,29 +662,28 @@ def compute_cross_model_cka(root_dir: str):
     Returns:
         np.array: A 2D NumPy array representing the CKA similarity matrix.
     """
-    # Set device to GPU if available, otherwise fallback to CPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     model_dirs = sorted([os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))])
     if len(model_dirs) != 2:
         raise ValueError("Expected exactly two model type directories in the root directory.")
 
-    model_type1_kernels = []  # For the first model type
-    model_type2_kernels = []  # For the second model type
+    model_type1_kernels = []  
+    model_type2_kernels = [] 
     model_name1 = ""
     model_name2 = ""
 
     for i, model_dir in enumerate(model_dirs):
         for filename in os.listdir(model_dir):
             model_path = os.path.join(model_dir, filename)
-            kernel = torch.load(model_path, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
+            kernel = torch.load(model_path, map_location=device,weights_only=False)  
 
             if i == 0:
-                model_type1_kernels.append(kernel)  # For the first model type
+                model_type1_kernels.append(kernel)  
                 _, model_name1 = model_dir.rsplit('/', 1)
             else:
                 _, model_name2 = model_dir.rsplit('/', 1)
-                model_type2_kernels.append(kernel)  # For the second model type
+                model_type2_kernels.append(kernel)  
 
     cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
 
@@ -714,10 +696,9 @@ def compute_cross_model_cka(root_dir: str):
         for j, kernel_B in enumerate(model_type2_kernels):
             for layer1, K_x in kernel_A.items():
                 for layer2, K_y in kernel_B.items():
-                    # Move kernels to GPU if available
                     K_x, K_y = K_x.to(device), K_y.to(device)
                     
-                    cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
+                    cka_value = CKA(K_x, K_y)  
                     idx1 = layer1_to_idx[layer1]
                     idx2 = layer2_to_idx[layer2]
                     
@@ -743,40 +724,25 @@ def compute_all_model_CKA(root_dir: str, output_dir: str):
     If the output directory does not exist, it is created.
     """
     
-    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    
-    # Configure logging
-    # log_file = os.path.join(output_dir, 'cka_computation.log')
-    # logging.basicConfig(filename=log_file, 
-    #                     level=logging.INFO,
-    #                     format='%(asctime)s - %(levelname)s - %(message)s')
-    
-    # logging.info("Starting CKA computation for models in %s", root_dir)
-    
-    # Get all folders in the root directory
+
     model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
 
-    # Iterate over all unique pairs of model directories
     for model_dir1, model_dir2 in itertools.product(model_dirs, repeat=2):
         model1 = os.path.basename(model_dir1)
         model2 = os.path.basename(model_dir2)
         
-        #logging.info("Computing CKA between %s and %s", model1, model2)
         
         print(f"Computing CKA between {model1} and {model2}...")
         
-        # Compute cross-model CKA
-        cka_results = compute_cross_model_CKA(model_dir1, model_dir2)  # Assumed function
+        cka_results = compute_cross_model_CKA(model_dir1, model_dir2) 
         
-        # Save results to a file in the output directory
         result_filename = f"{model1}_vs_{model2}.npy"
         result_path = os.path.join(output_dir, result_filename)
         np.save(result_path, cka_results)
         
         logging.info("Saved CKA results to %s", result_path)
         print(f"Saved results to {result_path}")
-        #results = [future.result() for future in futures]
 
     
     logging.info("CKA computation completed.")
@@ -790,32 +756,25 @@ def compute_all_model_CKA_lowmem(root_dir: str, output_dir: str):
     If the output directory does not exist, it is created.
     """
     
-    # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
     model_dirs = [os.path.join(root_dir, d) for d in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, d))]
 
-    # Iterate over all unique pairs of model directories
     for model_dir1, model_dir2 in itertools.product(model_dirs, repeat=2):
         model1 = os.path.basename(model_dir1)
         model2 = os.path.basename(model_dir2)
 
-        # Construct the result filename and path
         result_filename = f"{model1}_vs_{model2}.npy"
         result_path = os.path.join(output_dir, result_filename)
         
-        # Check if the result already exists
         if os.path.exists(result_path):
             print(f"CKA result between {model1} and {model2} already exists. Skipping computation.")
             continue  # Skip this model pair
         
-        #logging.info("Computing CKA between %s and %s", model1, model2)
         print(f"Computing CKA between {model1} and {model2}...")
 
-        # Compute cross-model CKA
-        cka_results = compute_cross_model_CKA_lowmem(model_dir1, model_dir2)  # Assumed function
+        cka_results = compute_cross_model_CKA_lowmem(model_dir1, model_dir2) 
         
-        # Save results to a file in the output directory
         np.save(result_path, cka_results)
         logging.info("Saved CKA results to %s", result_path)
         print(f"Saved results to {result_path}", flush=True)
@@ -825,11 +784,10 @@ def compute_all_model_CKA_lowmem(root_dir: str, output_dir: str):
 
 
 def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
-    # Set device to GPU if available, otherwise fallback to CPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model_type1_kernels = []  # For the first model type
-    model_type2_kernels = []  # For the second model type
+    model_type1_kernels = []  
+    model_type2_kernels = []  
     model_name1 = ""
     model_name2 = ""
     print("model1:",model_dir1)
@@ -839,8 +797,8 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path = os.path.join(model_dir1, filename)
-        kernel = torch.load(model_path, map_location=device)  # Load kernel dictionary onto the device
-        model_type1_kernels.append(kernel)  # For the first model type
+        kernel = torch.load(model_path, map_location=device)  
+        model_type1_kernels.append(kernel) 
         try:
             _, model_name1 = model_dir1.rsplit('/', 1)
         except Exception as e:
@@ -859,7 +817,7 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
             print(e)
             print("trying different slash")
             _, model_name2 = model_dir2.rsplit('\\',1)
-        model_type2_kernels.append(kernel)  # For the second model type
+        model_type2_kernels.append(kernel) 
     cka_results = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))
     layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type1_kernels[0].keys())}
     layer2_to_idx = {layer_name: idx for idx, layer_name in enumerate(model_type2_kernels[0].keys())}
@@ -867,15 +825,14 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
         os.makedirs("cka_csv", exist_ok=True)
     panda_data = []
     for i, kernel_A in enumerate(model_type1_kernels):
-        cka_inner = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0])))  # Initialize inner CKA matrix for each kernel_A
+        cka_inner = np.zeros((len(model_type1_kernels[0]), len(model_type2_kernels[0]))) 
         
         for j, kernel_B in enumerate(model_type2_kernels):
             for layer1, K_x in kernel_A.items():
                 for layer2, K_y in kernel_B.items():
-                    # Move kernels to GPU if available
                     K_x, K_y = K_x.to(device), K_y.to(device)
                     
-                    cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
+                    cka_value = CKA(K_x, K_y)  
                     idx1 = layer1_to_idx[layer1]
                     idx2 = layer2_to_idx[layer2]
                     panda_data.append((layer1,layer2,cka_value))
@@ -896,18 +853,15 @@ def compute_cross_model_CKA(model_dir1:str,model_dir2:str):
     df.to_csv(f"cka_csv/CKA_{model_name1}_vs_{model_name2}.csv", sep ="\t", index = False, header = True)
 
     cka_results /= len(model_type1_kernels)
-    return cka_results  # Return the CKA similarity matrix
+    return cka_results
     
 def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
-    # Set device to GPU if available, otherwise fallback to CPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("found device:",device)
 
-    #model_type1_kernels = []  # For the first model type
     og_kernels_count = 0
     comp_kernels_count = 0
     found_kernels = 0
-    #model_type2_kernels = []  # For the second model type
     model_name1 = ""
     model_name2 = ""
     print("model1:",model_dir1)
@@ -918,7 +872,6 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
             continue
         model_path = os.path.join(model_dir1, filename)
         og_kernel = torch.load(model_path, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
-        #model_type1_kernels.append(kernel)  # For the first model type
         try:
             _, model_name1 = model_dir1.rsplit('/', 1)
         except Exception as e:
@@ -930,7 +883,6 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path = os.path.join(model_dir2, filename)
-        #print("compare to:",model_path)
         comp_kernel = torch.load(model_path, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
         found_kernels +=1
         try:
@@ -939,7 +891,6 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
             print(e)
             print("trying different slash")
             _, model_name2 = model_dir2.rsplit('\\',1)
-        #model_type2_kernels.append(kernel)  # For the second model type
 
     cka_results = np.zeros((len(og_kernel), len(comp_kernel)))
     layer1_to_idx = {layer_name: idx for idx, layer_name in enumerate(og_kernel.keys())}
@@ -952,9 +903,9 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
         if not filename.endswith('.pth'):
             continue
         model_path1 = os.path.join(model_dir1, filename)
-        og_kernel = torch.load(model_path1, map_location=device,weights_only=False)  # Load kernel dictionary onto the device
+        og_kernel = torch.load(model_path1, map_location=device,weights_only=False)  
         og_kernels_count +=1
-        cka_inner = np.zeros((len(og_kernel), len(comp_kernel)))  # Initialize inner CKA matrix for each kernel_A
+        cka_inner = np.zeros((len(og_kernel), len(comp_kernel))) 
         for filename in os.listdir(model_dir2):
             if not filename.endswith('.pth'):
                 continue
@@ -963,10 +914,9 @@ def compute_cross_model_CKA_lowmem(model_dir1:str,model_dir2:str):
             comp_kernels_count +=1
             for layer1, K_x in og_kernel.items():
                 for layer2, K_y in comp_kernel.items():
-                    # Move kernels to GPU if available
                     K_x, K_y = K_x.to(device), K_y.to(device)
                     
-                    cka_value = CKA(K_x, K_y)  # Compute CKA between this pair of kernels
+                    cka_value = CKA(K_x, K_y)  
                     idx1 = layer1_to_idx[layer1]
                     idx2 = layer2_to_idx[layer2]
                     panda_data.append((layer1,layer2,cka_value))
@@ -995,8 +945,8 @@ def display_cka_matrix(cka_results, layer_names_model1: list[str], layer_names_m
 
     for i in range(n_layers1):
         for j in range(n_layers2):
-            similarity = cka_results[i, j]  # Access similarity directly from the ndarray
-            matrix[i, j] = np.nan_to_num(similarity)  # Handle NaN or Inf values
+            similarity = cka_results[i, j] 
+            matrix[i, j] = np.nan_to_num(similarity)  
 
     df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
 
@@ -1031,7 +981,6 @@ def display_differences_matrix_og(cka_results, layer_names_model1: list[str], la
 
     df = pd.DataFrame(matrix, index=layer_names_model1, columns=layer_names_model2)
 
-    # Plot the heatmap
     plt.figure(figsize=(10, 8))
     sns.heatmap(df, annot=True, cmap='gist_heat', fmt='.2f', square=True, linewidths=0.5, cbar=True)
     plt.title(f'CKA Similarity Heatmap ({title1} vs {title2} )')
@@ -1060,7 +1009,6 @@ def load_model_metadata(kernel_dir):
     for model_name in os.listdir(kernel_dir):
         model_path = os.path.join(kernel_dir, model_name)
         if os.path.isdir(model_path):
-            # Remove '_model' from model_name if it's in the name
             try:
                 model_name_without_suffix, _ = model_name.split('_',1)
             except Exception as e:
@@ -1088,19 +1036,15 @@ def plot_cka_heatmaps(cka_results_dir: str, kernel_dir: str):
     
     Each row in the final figure represents one model compared to all other models.
     """
-    # Load metadata (layer names & model display names)
     model_layers, model_display_names = load_model_metadata(kernel_dir)
-    # Collect available comparisons
     comparison_files = [f for f in os.listdir(cka_results_dir) if f.endswith('.npy')]
 
-    # Extract unique model names and group comparisons by model
     model_comparisons = {}
 
     for file in comparison_files:
         parts = file.replace('.npy', '').split('_vs_')
         if len(parts) == 2:
             model1, model2 = parts
-            # Group comparisons for each model
             if model1 not in model_comparisons:
                 model_comparisons[model1] = []
             if model2 not in model_comparisons:
@@ -1109,20 +1053,16 @@ def plot_cka_heatmaps(cka_results_dir: str, kernel_dir: str):
             model_comparisons[model1].append((model2, file))
             model_comparisons[model2].append((model1, file))
     print("model_comp:",model_comparisons)
-    # Sort the model names for consistent ordering
     model_names = sorted(model_comparisons.keys())
     print("model_names:",model_names)
-    # Plot heatmaps for each model comparison, one row at a time
     for i, model1 in enumerate(model_names):
         comparisons = model_comparisons[model1]
         prime_model_len = len(model_layers[model1][0])
-        # Plot heatmaps for each comparison
         for j, (model2, file) in enumerate(comparisons):
             file_path = os.path.join(cka_results_dir, file)
-            cka_matrix = np.load(file_path)  # Load CKA result
+            cka_matrix = np.load(file_path) 
             print("filepath:",file_path)
             print(cka_matrix)
-            # Get model display names and layers
             title1 = model_display_names.get(model1, model1)
             title2 = model_display_names.get(model2, model2)
             
@@ -1131,13 +1071,10 @@ def plot_cka_heatmaps(cka_results_dir: str, kernel_dir: str):
                 
             layers1 = model_layers.get(model1, [f"Layer {i}" for i in range(cka_matrix.shape[0])])[0]
             layers2 = model_layers.get(model2, [f"Layer {i}" for i in range(cka_matrix.shape[1])])[0]
-            # Ensure they are strings, not lists
             if isinstance(title1, list):
                 title1 = title1[0]
             if isinstance(title2, list):
                 title2 = title2[0]
-            # Display CKA matrix using the helper function
-            #print(title1)
             print(prime_model_len ," vs ", len(layers1), " vs ", len(layers2))
             print(prime_model_len, " vs ", cka_matrix.shape[0])
             
@@ -1190,21 +1127,17 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
     """
     os.makedirs(output_folder, exist_ok=True)
     
-    # Read all .npy files in the folder
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
     
-    # Extract unique model names
     model_names = sorted(set(
         name.split("_vs_")[0] for name in cka_files
     ).union(
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
     ))  
 
-    # Initialize an NxN matrix
     num_models = len(model_names)
     cka_matrix = np.zeros((num_models, num_models))
     
-    # Fill the matrix with CKA values
     for file in cka_files:
         model1, model2 = file.replace(".npy", "").split("_vs_")
         cka_value = np.load(os.path.join(result_folder, file))[0, 0]  # Extract scalar value
@@ -1212,13 +1145,11 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
         print("model1:",model1, "model2:",model2, "cka value:",cka_value)
         i, j = model_names.index(model1), model_names.index(model2)
         cka_matrix[i, j] = cka_value
-        cka_matrix[j, i] = cka_value  # Ensure symmetry
+        cka_matrix[j, i] = cka_value 
 
-    # Flip matrix to align diagonal from bottom-left to top-right
     cka_matrix = np.flipud(cka_matrix)
     model_names_reversed = list(reversed(model_names))
 
-    # Create heatmap
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
     
     plt.figure(figsize=(10, 8))
@@ -1227,7 +1158,6 @@ def compose_heat_matrix(result_folder: str, output_folder: str, title: str = "ck
     plt.xlabel('Model')
     plt.ylabel('Model')
     
-    # Save heatmap
     filepath = os.path.join(output_folder, f"{title}.png")
     plt.savefig(filepath, dpi=300, bbox_inches="tight")
     plt.close()
@@ -1254,7 +1184,6 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         "ShallowSGCNNet": 11027
     }
 
-    # Read CKA results
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
 
     model_names = sorted(set(
@@ -1263,7 +1192,6 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         name.split("_vs_")[1].replace(".npy", "") for name in cka_files
     ))
     print(model_names)
-    # Reorder so ShallowFBCSPNet is first
     def reorder(models):
         return ['ShallowFBCSP'] + [m for m in models if m not in {'ShallowFBCSPNet', 'ShallowFBCSP'}]
 
@@ -1285,11 +1213,9 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         cka_matrix[i, j] = cka_value
         cka_matrix[j, i] = cka_value  # symmetry
 
-        # Map full model names to short CSV names
         model1_csv = model_name_map.get(model1, model1)
         model2_csv = model_name_map.get(model2, model2)
 
-        # Check shared keys file
         keyfile1 = os.path.join(csv_folder, f"Shared_Keys_{model1_csv}_and_{model2_csv}.csv")
         keyfile2 = os.path.join(csv_folder, f"Shared_Keys_{model2_csv}_and_{model1_csv}.csv")
         keyfile = keyfile1 if os.path.exists(keyfile1) else keyfile2 if os.path.exists(keyfile2) else None
@@ -1300,11 +1226,6 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
             num_keys = len(shared_lines) - 1 if ("idx" in shared_lines[0].lower() or "index" in shared_lines[0].lower()) else len(shared_lines)
         else:
             num_keys = 0
-            # print("keyfile not found or not a file:", keyfile)
-            # print("keyfile1:" ,keyfile1)
-            # print("keyfile2:" ,keyfile2)
-            # print("model1.csv:", model1_csv)
-            # print("model2.csv:", model2_csv)
         if model1 == model2:
             num_keys = model_unanimous_map.get(model1, 0)
 
@@ -1314,7 +1235,6 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         annotation_matrix[i][j] = annotation_text
         annotation_matrix[j][i] = annotation_text
 
-    # Flip vertically for proper heatmap orientation
     cka_matrix = np.flipud(cka_matrix)
     print(cka_matrix)
     annotation_matrix = list(reversed(annotation_matrix))
@@ -1328,7 +1248,6 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
     df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
     annot_df = pd.DataFrame(annotation_matrix, index=model_names_reversed, columns=model_names)
 
-    # Plot
     plt.figure(figsize=(10, 8))
     sns.heatmap(
         df,
@@ -1340,7 +1259,7 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
         cbar=True,
         vmin=0,
         vmax=1,
-        annot_kws={"size": 24, "weight": "bold"}  # Thicker annotation text
+        annot_kws={"size": 24, "weight": "bold"}
     )
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
@@ -1357,117 +1276,6 @@ def compose_heat_matrix_shared(result_folder: str, output_folder: str, csv_folde
 
     print(f"✅ Heatmap saved to {filepath}")
 
-def compose_heat_matrix_shared_full(result_folder: str, output_folder: str, csv_folder: str, title: str = "cka heatmap"):
-    os.makedirs(output_folder, exist_ok=True)
-
-    model_name_map = {
-        "ShallowFBCSPNet": "Shallow",
-        "ShallowRNNNet": "RNN",
-        "ShallowLSTM": "LSTM",
-        "ShallowAttentionNet": "Attention",
-        "ShallowSGCNNet": "SGCN"
-    }
-
-    model_unanimous_map = {
-        "ShallowFBCSPNet": 4375,
-        "ShallowRNNNet": 4375,
-        "ShallowLSTM": 4375,
-        "ShallowAttentionNet": 4375,
-        "ShallowSGCNNet": 4375
-    }
-
-    # Read CKA results
-    cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
-
-    model_names = sorted(set(
-        name.split("_vs_")[0] for name in cka_files
-    ).union(
-        name.split("_vs_")[1].replace(".npy", "") for name in cka_files
-    ))
-
-    # Reorder so ShallowFBCSPNet is first
-    def reorder(models):
-        return ['ShallowFBCSPNet'] + [m for m in models if m != 'ShallowFBCSPNet']
-
-    model_names = reorder(model_names)
-
-    num_models = len(model_names)
-    cka_matrix = np.zeros((num_models, num_models))
-    annotation_matrix = [["" for _ in range(num_models)] for _ in range(num_models)]
-
-    for file in cka_files:
-        model1, model2 = file.replace(".npy", "").split("_vs_")
-        cka_value = np.load(os.path.join(result_folder, file))[0, 0]
-        if model1 not in model_names or model2 not in model_names:
-            continue
-        i, j = model_names.index(model1), model_names.index(model2)
-        cka_matrix[i, j] = cka_value
-        cka_matrix[j, i] = cka_value  # symmetry
-
-        # Map full model names to short CSV names
-        model1_csv = model_name_map.get(model1, model1)
-        model2_csv = model_name_map.get(model2, model2)
-
-        # Check shared keys file
-        keyfile1 = os.path.join(csv_folder, f"Shared_Keys_Spatial.csv")
-        keyfile = keyfile1 if os.path.exists(keyfile1) else keyfile2 if os.path.exists(keyfile2) else None
-
-        if keyfile and os.path.isfile(keyfile):
-            with open(keyfile, "r") as f:
-                shared_lines = f.readlines()
-            num_keys = len(shared_lines) - 1 if "idx" in shared_lines[0].lower() else len(shared_lines)
-        else:
-            num_keys = 0
-            # print("keyfile not found or not a file:", keyfile)
-            # print("keyfile1:" ,keyfile1)
-            # print("keyfile2:" ,keyfile2)
-            # print("model1.csv:", model1_csv)
-            # print("model2.csv:", model2_csv)
-        if model1 == model2:
-            num_keys = model_unanimous_map.get(model1, 0)
-
-        print(f"num keys: {num_keys}, for models: {model1} and {model2}")
-
-        annotation_text = f"{cka_value:.2f}\n(n={num_keys})"
-        annotation_matrix[i][j] = annotation_text
-        annotation_matrix[j][i] = annotation_text
-
-    # Flip vertically for proper heatmap orientation
-    cka_matrix = np.flipud(cka_matrix)
-    annotation_matrix = list(reversed(annotation_matrix))
-    model_names_reversed = list(reversed(model_names))
-
-    df = pd.DataFrame(cka_matrix, index=model_names_reversed, columns=model_names)
-    annot_df = pd.DataFrame(annotation_matrix, index=model_names_reversed, columns=model_names)
-
-    # Plot
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(
-        df,
-        annot=annot_df,
-        fmt='',
-        cmap='gist_heat',
-        square=True,
-        linewidths=0.5,
-        cbar=True,
-        vmin=0,
-        vmax=1,
-        annot_kws={"size": 18, "weight": "bold"}  # Thicker annotation text
-    )
-    cbar = plt.gca().collections[0].colorbar
-    cbar.ax.tick_params(labelsize=18)
-
-    plt.title(title, fontsize=22)
-    plt.xlabel('Model', fontsize=18)
-    plt.ylabel('Model', fontsize=18)
-    plt.xticks(fontsize=16)
-    plt.yticks(fontsize=16)
-
-    filepath = os.path.join(output_folder, f"{title}.png")
-    plt.savefig(filepath, dpi=300, bbox_inches="tight")
-    plt.close()
-
-    print(f"✅ Heatmap saved to {filepath}")
 
 
 def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: str, title: str = "cka heatmap"):
@@ -1482,10 +1290,8 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         "ShallowSGCN": "ShallowSGCN"
     }
 
-    # Read all .npy files
     cka_files = [f for f in os.listdir(result_folder) if f.endswith(".npy")]
 
-    # Get unique model names, removing 'Net' suffix
     model_names_raw = set(
         name.split("_vs_")[0] for name in cka_files
     ).union(
@@ -1493,7 +1299,6 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
     )
     model_names = sorted(name[:-3] if name.endswith("Net") else name for name in model_names_raw)
 
-    # --- Compute average accuracies ---
     model_accuracies = {}
     for model_name in model_names:
         model_name_folder = model_name_map.get(model_name, model_name)
@@ -1513,13 +1318,11 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         model_accuracies[model_name] = avg_acc
         print(f"Model {model_name}: Average Accuracy = {avg_acc:.2f}%")
 
-    # Reorder so ShallowFBCSP is first
     def reorder(models):
         return ['ShallowFBCSP'] + [m for m in models if m != 'ShallowFBCSP']
     model_names = reorder(model_names)
     model_accuracies = {k: model_accuracies[k] for k in model_names}
 
-    # Construct annotated matrix
 
     num_models = len(model_names)
     matrix_vals = np.zeros((num_models, num_models))
@@ -1546,14 +1349,12 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         annotations[i][j] = annotation
         annotations[j][i] = f"{cka_value:.2f}"
 
-    # Flip matrix vertically
     matrix_vals = np.flipud(matrix_vals)
     annotations = annotations[::-1]
 
     y_labels = list(reversed([f"{name.removeprefix("Shallow").removesuffix("Net")}\n({model_accuracies[name]:.2f}%)" for name in model_names]))
     x_labels = [f"{name.removeprefix("Shallow").removesuffix("Net")}\n({model_accuracies[name]:.2f}%)" for name in model_names]
 
-    # Plot
     plt.figure(figsize=(10, 8))
     sns.heatmap(
         matrix_vals,
@@ -1567,7 +1368,7 @@ def compose_heat_matrix_acc(result_folder: str, output_folder: str, model_path: 
         cbar=True,
         vmin=0,
         vmax=1,
-        annot_kws={"size": 24, "weight": "bold"}  # Thicker annotation text
+        annot_kws={"size": 24, "weight": "bold"} 
     )
     cbar = plt.gca().collections[0].colorbar
     cbar.ax.tick_params(labelsize=18)
@@ -1659,20 +1460,18 @@ def adjacency_matrix_distance_motion(positions, delta=1.0):
     distance_matrix = np.zeros((n, n))
     adj_matrix = np.zeros((n, n))
 
-    # Compute Euclidean distances between ALL pairs of electrodes
     for i in range(n):
         for j in range(n):
             x1, y1 = positions[i + 1]
             x2, y2 = positions[j + 1]
             distance_matrix[i, j] = max(abs(x1 - x2), abs(y1 - y2))
 
-    # Compute physical distance and adjacency weights, enforce symmetry
     for i in range(n):
-        for j in range(i, n):  # Only compute upper triangular matrix (i <= j)
-            if i != j:  # Ignore self-connections
-                d_ij = distance_matrix[i, j] * 3.5  # Convert to physical distance
+        for j in range(i, n):  
+            if i != j:  
+                d_ij = distance_matrix[i, j] * 3.5 
                 adj_matrix[i, j] = min(1, delta / (d_ij ** 2)) if d_ij > 0 else 0
-                adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
+                adj_matrix[j, i] = adj_matrix[i, j]  
                 
                 
     
@@ -1684,24 +1483,18 @@ def adjacency_matrix_distance_FACED(positions, delta=1.0):
     distance_matrix = np.zeros((n, n))
     adj_matrix = np.zeros((n, n))
 
-    # Compute Euclidean distances between ALL pairs of electrodes
     for i in range(n):
         for j in range(n):
             x1, y1 = positions[i + 1]
             x2, y2 = positions[j + 1]
             distance_matrix[i, j] = max(abs(x1 - x2), abs(y1 - y2))
 
-    # Compute physical distance and adjacency weights, enforce symmetry
     for i in range(n):
-        for j in range(i, n):  # Only compute upper triangular matrix (i <= j)
-            if i != j:  # Ignore self-connections
+        for j in range(i, n):  
+            if i != j:  
                 d_ij = distance_matrix[i, j] * 3.5  # Convert to physical distance
                 adj_matrix[i, j] = min(1, delta / (d_ij ** 2)) if d_ij > 0 else 0
                 adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
-            # else:
-            #     d_ij = distance_matrix[i,j]
-            #     adj_matrix[i, j] = 0.8
-            #     adj_matrix[j, i] = adj_matrix[i, j]  # Enforce symmetry
     
     return distance_matrix, adj_matrix
             
